@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from "motion/react";
-import { Home, Target, Leaf, Gift, User, BarChart3, Users, Newspaper, X, Menu, Coins } from "lucide-react";
+import { Menu, X, Home, Newspaper, Trophy, BarChart3, Users, Gift, User, Settings, Globe, Coins } from "lucide-react";
 import { useLanguage } from "../utils/LanguageContext";
-import type { Page } from "../App";
+import { useUser } from "../utils/UserContext";
+import logoHM from "figma:asset/7a5625eb34dcf1c2699e0574b36f2e03c14671c8.png";
 
 interface MobileSidebarProps {
   currentPage: Page;
@@ -11,12 +12,39 @@ interface MobileSidebarProps {
 }
 
 export function MobileSidebar({ currentPage, onPageChange, isOpen, onToggle }: MobileSidebarProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { userProfile } = useUser();
+
+  // Get gradient colors based on current page
+  const getHeaderGradient = () => {
+    switch (currentPage) {
+      case "home":
+        return "bg-gradient-to-r from-[#FF5757] to-red-500";
+      case "newsfeed":
+        return "bg-gradient-to-r from-[#FF5757] via-[#FF8B8B] to-blue-600";
+      case "challenges":
+        return "bg-gradient-to-r from-[#FF5757] via-[#FF8B8B] to-orange-500";
+      case "dashboard":
+        return "bg-gradient-to-r from-[#FF5757] via-[#FF8B8B] to-cyan-600";
+      case "community":
+        return "bg-gradient-to-r from-[#FF5757] via-[#FF8B8B] to-purple-600";
+      case "rewards":
+        return "bg-gradient-to-r from-[#FF5757] via-[#FF8B8B] to-yellow-500";
+      case "profile":
+        return "bg-gradient-to-r from-[#FF5757] via-[#FF8B8B] to-emerald-500";
+      case "settings":
+        return "bg-gradient-to-r from-[#FF5757] via-[#FF8B8B] to-gray-600";
+      case "friends":
+        return "bg-gradient-to-r from-[#FF5757] via-[#FF8B8B] to-pink-600";
+      default:
+        return "bg-gradient-to-r from-[#FF5757] to-red-500";
+    }
+  };
   
   const navItems: { id: Page; icon: any; label: string; description: string }[] = [
     { id: "home", icon: Home, label: t.nav.home, description: t.language === "de" ? "Übersicht & Quick Actions" : "Overview & Quick Actions" },
     { id: "newsfeed", icon: Newspaper, label: t.nav.newsfeed, description: "Campus News & Updates" },
-    { id: "challenges", icon: Target, label: t.nav.challenges, description: t.language === "de" ? "Wöchentliche Herausforderungen" : "Weekly Challenges" },
+    { id: "challenges", icon: Trophy, label: t.nav.challenges, description: t.language === "de" ? "Wöchentliche Herausforderungen" : "Weekly Challenges" },
     { id: "dashboard", icon: BarChart3, label: t.nav.dashboard, description: t.language === "de" ? "Statistiken & Impact" : "Statistics & Impact" },
     { id: "community", icon: Users, label: t.nav.community, description: t.language === "de" ? "Rankings & Freunde" : "Rankings & Friends" },
     { id: "rewards", icon: Gift, label: t.nav.rewards, description: t.language === "de" ? "Punkte einlösen" : "Redeem Points" },
@@ -31,7 +59,7 @@ export function MobileSidebar({ currentPage, onPageChange, isOpen, onToggle }: M
   return (
     <>
       {/* Header with Hamburger Menu */}
-      <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-emerald-600 to-green-600 text-white px-4 py-3 flex items-center justify-between z-40 shadow-lg">
+      <div className={`fixed top-0 left-0 right-0 ${getHeaderGradient()} text-white px-4 py-3 flex items-center justify-between z-40 shadow-lg`}>
         <button
           onClick={onToggle}
           className="p-2 hover:bg-white/10 rounded-lg transition-colors"
@@ -44,7 +72,12 @@ export function MobileSidebar({ currentPage, onPageChange, isOpen, onToggle }: M
           <span className="text-lg">Eco Coins</span>
         </div>
         
-        <div className="w-10" /> {/* Spacer for centering */}
+        {/* HM Logo in white */}
+        <img 
+          src={logoHM} 
+          alt="Hochschule München" 
+          className="h-8 object-contain brightness-0 invert"
+        />
       </div>
 
       {/* Overlay */}
@@ -70,22 +103,28 @@ export function MobileSidebar({ currentPage, onPageChange, isOpen, onToggle }: M
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed left-0 bg-white shadow-2xl z-50 w-80 max-w-[85vw] overflow-y-auto"
+            className="fixed left-0 bg-white dark:bg-gray-800 shadow-2xl z-50 w-80 max-w-[85vw] overflow-y-auto"
             style={{ top: '56px', bottom: 0 }} // Below header, full height
           >
             {/* Sidebar Header */}
-            <div className="bg-gradient-to-br from-emerald-50 to-green-50 p-6 border-b border-emerald-100">
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="text-xl text-gray-900">Navigation</h2>
+            <div className="bg-gradient-to-br from-[#FF5757] to-[#E64545] p-6 border-b border-red-200">
+              <div className="flex items-center justify-between mb-4">
+                {/* HM Logo in Sidebar */}
+                <img 
+                  src={logoHM} 
+                  alt="Hochschule München" 
+                  className="h-10 object-contain brightness-0 invert"
+                />
                 <button
                   onClick={onToggle}
-                  className="p-1 hover:bg-emerald-100 rounded-lg transition-colors"
+                  className="p-1 hover:bg-white/10 rounded-lg transition-colors"
                 >
-                  <X className="w-5 h-5 text-gray-600" />
+                  <X className="w-5 h-5 text-white" />
                 </button>
               </div>
-              <p className="text-sm text-gray-600">
-                Wähle einen Bereich
+              <h2 className="text-xl text-white mb-1">Navigation</h2>
+              <p className="text-sm text-white/80">
+                {t.language === "de" ? "Wähle einen Bereich" : "Choose a section"}
               </p>
             </div>
 
@@ -105,19 +144,19 @@ export function MobileSidebar({ currentPage, onPageChange, isOpen, onToggle }: M
                       onClick={() => handleNavClick(item.id)}
                       className={`w-full flex items-start gap-4 p-4 rounded-xl transition-all ${
                         isActive
-                          ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg"
-                          : "hover:bg-gray-50 text-gray-700"
+                          ? "bg-gradient-to-r from-[#FF5757] to-[#E64545] text-white shadow-lg"
+                          : "hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
                       }`}
                     >
-                      <div className={`flex-shrink-0 ${isActive ? "text-white" : "text-emerald-600"}`}>
+                      <div className={`flex-shrink-0 ${isActive ? "text-white" : "text-[#FF5757]"}`}>
                         <Icon className="w-6 h-6" />
                       </div>
                       <div className="flex-1 text-left">
-                        <div className={`${isActive ? "" : "text-gray-900"}`}>
+                        <div className={`${isActive ? "" : "text-gray-900 dark:text-gray-100"}`}>
                           {item.label}
                         </div>
                         <div className={`text-xs mt-0.5 ${
-                          isActive ? "text-emerald-50" : "text-gray-500"
+                          isActive ? "text-red-50" : "text-gray-500 dark:text-gray-400"
                         }`}>
                           {item.description}
                         </div>
@@ -135,13 +174,13 @@ export function MobileSidebar({ currentPage, onPageChange, isOpen, onToggle }: M
             </nav>
 
             {/* Sidebar Footer */}
-            <div className="p-6 border-t border-gray-100 bg-gradient-to-br from-blue-50 to-cyan-50 mt-4">
+            <div className="p-6 border-t border-gray-100 dark:border-gray-700 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-gray-700 dark:to-gray-600 mt-4">
               <div className="text-center">
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                   Gemeinsam für die Umwelt! 🌍
                 </p>
-                <div className="flex items-center justify-center gap-2 text-emerald-600">
-                  <Leaf className="w-4 h-4" />
+                <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400">
+                  <Globe className="w-4 h-4" />
                   <span className="text-xs">Eco Coins App v1.0</span>
                 </div>
               </div>

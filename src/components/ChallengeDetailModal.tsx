@@ -1,331 +1,306 @@
-"use client";
-
-import { motion } from "motion/react";
-import { X, Clock, Award, Calendar, CheckCircle, TrendingUp, Play, Eye, XCircle } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { X, Award, Clock, Users, TrendingUp, Play, CheckCircle, BarChart } from "lucide-react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
+import { Progress } from "./ui/progress";
 import { useLanguage } from "../utils/LanguageContext";
-import type { Challenge, CompletedActionDetail } from "../utils/challengeManager";
-import { getTimeRemaining } from "../utils/challengeManager";
+import { useState } from "react";
+import { toast } from "sonner@2.0.3";
+import type { Challenge } from "../utils/challengeManager";
+import { startChallenge, getChallenges } from "../utils/challengeManager";
+import { PointsAnimation } from "./PointsAnimation";
+import { addPointsTransaction } from "./PointsHistoryModal";
 
 interface ChallengeDetailModalProps {
   challenge: Challenge | null;
   isOpen: boolean;
   onClose: () => void;
-  onStart: (challengeId: string) => void;
-  onCancel: (challengeId: string) => void;
-  onOpenAction: (actionType: Challenge["actionType"]) => void;
+  onUpdate: () => void;
 }
 
-export function ChallengeDetailModal({
-  challenge,
-  isOpen,
-  onClose,
-  onStart,
-  onCancel,
-  onOpenAction,
-}: ChallengeDetailModalProps) {
+export function ChallengeDetailModal({ challenge, isOpen, onClose, onUpdate }: ChallengeDetailModalProps) {
   const { language } = useLanguage();
-  
-  if (!isOpen || !challenge) return null;
+  const [showPointsAnimation, setShowPointsAnimation] = useState(false);
 
-  const progressPercentage = (challenge.currentCount / challenge.targetCount) * 100;
+  if (!challenge) return null;
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "Leicht":
-      case "Easy":
-        return "bg-green-100 text-green-700 border-green-200";
-      case "Mittel":
-      case "Medium":
-        return "bg-amber-100 text-amber-700 border-amber-200";
-      case "Schwer":
-      case "Hard":
-        return "bg-red-100 text-red-700 border-red-200";
-      default:
-        return "bg-gray-100 text-gray-700 border-gray-200";
-    }
+  const title = language === "de" ? challenge.titleDe : challenge.titleEn;
+  const description = language === "de" ? challenge.descriptionDe : challenge.descriptionEn;
+  const duration = language === "de" ? challenge.durationDe : challenge.durationEn;
+
+  const texts = {
+    de: {
+      challengeDetails: "Challenge Details",
+      status: "Status",
+      progress: "Fortschritt",
+      reward: "Belohnung",
+      duration: "Dauer",
+      participants: "Teilnehmer",
+      completionRate: "Erfolgsrate",
+      avgTime: "Ø Abschlusszeit",
+      start: "Challenge starten",
+      continue: "Fortsetzen",
+      completed: "Abgeschlossen!",
+      viewStats: "Statistik ansehen",
+      statistics: "Statistik",
+      available: "Verfügbar",
+      active: "Aktiv",
+      completedStatus: "Abgeschlossen",
+      coinsAwarded: "Coins gutgeschrieben!",
+      startedSuccess: "Challenge gestartet!",
+      close: "Schließen",
+    },
+    en: {
+      challengeDetails: "Challenge Details",
+      status: "Status",
+      progress: "Progress",
+      reward: "Reward",
+      duration: "Duration",
+      participants: "Participants",
+      completionRate: "Completion Rate",
+      avgTime: "Avg Completion Time",
+      start: "Start Challenge",
+      continue: "Continue",
+      completed: "Completed!",
+      viewStats: "View Statistics",
+      statistics: "Statistics",
+      available: "Available",
+      active: "Active",
+      completedStatus: "Completed",
+      coinsAwarded: "Coins awarded!",
+      startedSuccess: "Challenge started!",
+      close: "Close",
+    },
   };
 
-  const getActionName = (actionType: Challenge["actionType"]) => {
-    const names = {
-      cycling: language === "de" ? "Fahrrad-Tracking" : "Bike Tracking",
-      recycling: language === "de" ? "Recycling Scanner" : "Recycling Scanner",
-      "reusable-cup": language === "de" ? "Mehrweg-Becher" : "Reusable Cup",
-      quiz: language === "de" ? "Nachhaltigkeits-Quiz" : "Sustainability Quiz",
-      event: language === "de" ? "Campus Events" : "Campus Events",
-      "book-exchange": language === "de" ? "Büchertausch" : "Book Exchange",
+  const t = texts[language];
+
+  const handleStart = () => {
+    startChallenge(challenge.id);
+    toast.success(t.startedSuccess);
+    onUpdate();
+    onClose();
+  };
+
+  const handleComplete = () => {
+    // Award coins
+    const totalCoins = parseInt(localStorage.getItem("totalCoins") || "0");
+    localStorage.setItem("totalCoins", (totalCoins + challenge.coins).toString());
+
+    // Add to history
+    addPointsTransaction({
+      type: "earn",
+      amount: challenge.coins,
+      source: title,
+      timestamp: new Date(),
+      category: language === "de" ? "Challenge abgeschlossen" : "Challenge Completed",
+    });
+
+    // Update challenge status directly in localStorage
+    const challenges = getChallenges();
+    const currentChallenge = challenges.find(c => c.id === challenge.id);
+    if (currentChallenge) {
+      currentChallenge.status = "completed";
+      currentChallenge.completedAt = new Date();
+      localStorage.setItem("challenges", JSON.stringify(challenges));
+    }
+
+    // Show animation
+    setShowPointsAnimation(true);
+    setTimeout(() => {
+      setShowPointsAnimation(false);
+      onUpdate();
+      onClose();
+    }, 2000);
+
+    toast.success(t.coinsAwarded);
+  };
+
+  const getStatusBadge = () => {
+    const statusConfig = {
+      available: { color: "bg-blue-100 text-blue-800", text: t.available },
+      active: { color: "bg-green-100 text-green-800", text: t.active },
+      completed: { color: "bg-purple-100 text-purple-800", text: t.completedStatus },
     };
-    return names[actionType] || actionType;
+
+    const config = statusConfig[challenge.status];
+    return (
+      <Badge className={`${config.color} text-xs`}>
+        {config.text}
+      </Badge>
+    );
   };
 
-  const formatActionDetail = (action: CompletedActionDetail) => {
-    const date = new Date(action.timestamp);
-    const dateStr = date.toLocaleDateString("de-DE", {
-      day: "2-digit",
-      month: "2-digit",
-    });
-    const timeStr = date.toLocaleTimeString("de-DE", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-    let details = `${dateStr} um ${timeStr}`;
-    
-    if (action.duration) {
-      const minutes = Math.floor(action.duration / 60);
-      details += ` • ${minutes} Min.`;
-    }
-    if (action.distance) {
-      details += ` • ${action.distance.toFixed(1)} km`;
-    }
-    if (action.amount) {
-      details += ` • ${action.amount} Flaschen`;
-    }
-    if (action.score !== undefined) {
-      details += ` • ${action.score}% erreicht`;
-    }
-    if (action.location) {
-      details += ` • ${action.location}`;
-    }
-
-    return details;
-  };
+  const progressPercentage = challenge.progress 
+    ? (challenge.progress.current / challenge.progress.target) * 100 
+    : 0;
+  const isCompleted = challenge.status === "completed" || progressPercentage >= 100;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4">
-      <motion.div
-        initial={{ y: "100%", opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: "100%", opacity: 0 }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto"
-      >
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-gradient-to-br from-emerald-600 to-green-600 text-white p-6 rounded-t-3xl">
-          <button
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 rounded-full p-2 transition-colors"
+            className="fixed inset-0 bg-black/50 z-50"
+            style={{ top: "56px" }}
+          />
+
+          {/* Modal */}
+          <motion.div
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl max-h-[90vh] overflow-y-auto"
+            style={{ top: "56px" }}
           >
-            <X className="w-5 h-5" />
-          </button>
+            {/* Points Animation */}
+            {showPointsAnimation && (
+              <PointsAnimation points={challenge.coins} onComplete={() => setShowPointsAnimation(false)} />
+            )}
 
-          <div className="flex items-start gap-4 mb-4">
-            <motion.div
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              className="text-5xl"
-            >
-              {challenge.icon}
-            </motion.div>
-            <div className="flex-1">
-              <Badge className={`${getDifficultyColor(language === "de" ? challenge.difficulty : challenge.difficultyEn)} border mb-2`}>
-                {language === "de" ? challenge.difficulty : challenge.difficultyEn}
-              </Badge>
-              <h2 className="text-2xl mb-2">{language === "de" ? challenge.title : challenge.titleEn}</h2>
-              <p className="text-emerald-100 text-sm">{language === "de" ? challenge.description : challenge.descriptionEn}</p>
-            </div>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span>{language === "de" ? "Fortschritt" : "Progress"}</span>
-              <span className="font-bold">
-                {challenge.currentCount}/{challenge.targetCount}
-              </span>
-            </div>
-            <Progress
-              value={progressPercentage}
-              className="h-3 bg-white/20 [&>div]:bg-white"
-            />
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="p-6 space-y-4">
-          {/* Info Cards */}
-          <div className="grid grid-cols-2 gap-3">
-            <Card className="p-4 bg-emerald-50 border-emerald-200">
-              <div className="flex items-center gap-2 mb-2">
-                <Clock className="w-4 h-4 text-emerald-600" />
-                <p className="text-xs text-emerald-700">
-                  {language === "de" ? "Verbleibende Zeit" : "Time Remaining"}
-                </p>
-              </div>
-              <p className="text-lg text-emerald-900">
-                {getTimeRemaining(challenge.deadline, language)}
-              </p>
-            </Card>
-
-            <Card className="p-4 bg-amber-50 border-amber-200">
-              <div className="flex items-center gap-2 mb-2">
-                <Award className="w-4 h-4 text-amber-600" />
-                <p className="text-xs text-amber-700">
-                  {language === "de" ? "Belohnung" : "Reward"}
-                </p>
-              </div>
-              <p className="text-lg text-amber-900">+{challenge.reward} Coins</p>
-            </Card>
-          </div>
-
-          {/* Status Card */}
-          {challenge.status === "inactive" && (
-            <Card className="p-4 bg-blue-50 border-blue-200">
-              <div className="flex items-center gap-3">
-                <Play className="w-5 h-5 text-blue-600" />
-                <div className="flex-1">
-                  <p className="text-sm text-blue-900 mb-1">
-                    {language === "de"
-                      ? "Challenge noch nicht gestartet"
-                      : "Challenge not started yet"}
-                  </p>
-                  <p className="text-xs text-blue-700">
-                    {language === "de"
-                      ? "Starte die Challenge, um mit dem Sammeln zu beginnen!"
-                      : "Start the challenge to begin collecting!"}
-                  </p>
+            {/* Header */}
+            <div className={`bg-gradient-to-r ${challenge.color} text-white p-6 rounded-t-3xl`}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-2xl">
+                    {challenge.icon}
+                  </div>
+                  <div>
+                    <h2 className="text-2xl">{title}</h2>
+                    <p className="text-white/80 text-sm">{description}</p>
+                  </div>
                 </div>
+                <button
+                  onClick={onClose}
+                  className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-colors flex-shrink-0"
+                >
+                  <X className="w-6 h-6" />
+                </button>
               </div>
-            </Card>
-          )}
-
-          {challenge.status === "completed" && (
-            <Card className="p-4 bg-green-50 border-green-200">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <div className="flex-1">
-                  <p className="text-sm text-green-900 mb-1">
-                    {language === "de"
-                      ? "Challenge abgeschlossen! 🎉"
-                      : "Challenge completed! 🎉"}
-                  </p>
-                  <p className="text-xs text-green-700">
-                    {language === "de"
-                      ? `Du hast ${challenge.reward} Eco Coins verdient!`
-                      : `You earned ${challenge.reward} Eco Coins!`}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          )}
-
-          {/* Action Button */}
-          {challenge.status === "inactive" ? (
-            <Button
-              onClick={() => onStart(challenge.id)}
-              className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white py-6"
-            >
-              <Play className="w-5 h-5 mr-2" />
-              {language === "de" ? "Challenge starten" : "Start Challenge"}
-            </Button>
-          ) : challenge.status === "active" ? (
-            <div className="space-y-3">
-              <Button
-                onClick={() => onOpenAction(challenge.actionType)}
-                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-6"
-              >
-                <TrendingUp className="w-5 h-5 mr-2" />
-                {language === "de"
-                  ? `${getActionName(challenge.actionType)} öffnen`
-                  : `Open ${getActionName(challenge.actionType)}`}
-              </Button>
-              <Button
-                onClick={() => {
-                  onCancel(challenge.id);
-                  onClose();
-                }}
-                variant="outline"
-                className="w-full border-red-300 text-red-600 hover:bg-red-50 py-6"
-              >
-                <XCircle className="w-5 h-5 mr-2" />
-                {language === "de" ? "Challenge abbrechen" : "Cancel Challenge"}
-              </Button>
             </div>
-          ) : (
-            <Button
-              onClick={() => onOpenAction(challenge.actionType)}
-              className="w-full bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white py-6"
-            >
-              <Eye className="w-5 h-5 mr-2" />
-              {language === "de" ? "Aktion ansehen" : "View Action"}
-            </Button>
-          )}
 
-          {/* Completed Actions List */}
-          {challenge.completedActions.length > 0 && (
-            <div>
-              <h3 className="text-gray-900 mb-3 flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-emerald-600" />
-                {language === "de"
-                  ? `Abgeschlossene Aktionen (${challenge.completedActions.length})`
-                  : `Completed Actions (${challenge.completedActions.length})`}
-              </h3>
-              <div className="space-y-2">
-                {challenge.completedActions.map((action, index) => (
-                  <motion.div
-                    key={action.id}
-                    initial={{ x: -10, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: index * 0.05 }}
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              {/* Status */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">{t.status}:</span>
+                {getStatusBadge()}
+              </div>
+
+              {/* Progress */}
+              {challenge.progress && (
+                <Card className="p-4 bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm text-gray-700">{t.progress}</span>
+                    <span className="text-sm text-gray-900">
+                      {challenge.progress.current} / {challenge.progress.target} {challenge.progress.unit}
+                    </span>
+                  </div>
+                  <Progress value={progressPercentage} className="h-3 mb-2" />
+                  <p className="text-xs text-gray-600 text-right">
+                    {Math.round(progressPercentage)}%
+                  </p>
+                </Card>
+              )}
+
+              {/* Details Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Reward */}
+                <Card className="p-4 bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-200">
+                  <Award className="w-5 h-5 text-amber-600 mb-2" />
+                  <p className="text-xs text-gray-600 mb-1">{t.reward}</p>
+                  <p className="text-lg text-amber-600">+{challenge.coins}</p>
+                </Card>
+
+                {/* Duration */}
+                <Card className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
+                  <Clock className="w-5 h-5 text-blue-600 mb-2" />
+                  <p className="text-xs text-gray-600 mb-1">{t.duration}</p>
+                  <p className="text-sm text-blue-600">{duration}</p>
+                </Card>
+              </div>
+
+              {/* Statistics */}
+              {challenge.statistics && (
+                <Card className="p-4 bg-white border-gray-200">
+                  <h3 className="text-sm text-gray-900 mb-3 flex items-center gap-2">
+                    <BarChart className="w-4 h-4" />
+                    {t.statistics}
+                  </h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="text-center p-2 bg-gray-50 rounded-lg">
+                      <p className="text-xs text-gray-600 mb-1">{t.participants}</p>
+                      <p className="text-lg text-gray-900">{challenge.statistics.totalParticipants}</p>
+                    </div>
+                    <div className="text-center p-2 bg-gray-50 rounded-lg">
+                      <p className="text-xs text-gray-600 mb-1">{t.completionRate}</p>
+                      <p className="text-lg text-gray-900">{challenge.statistics.completionRate}%</p>
+                    </div>
+                    <div className="text-center p-2 bg-gray-50 rounded-lg">
+                      <p className="text-xs text-gray-600 mb-1">{t.avgTime}</p>
+                      <p className="text-sm text-gray-900">{challenge.statistics.averageTime}</p>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-2">
+                {challenge.status === "available" && (
+                  <Button
+                    onClick={handleStart}
+                    className={`w-full bg-gradient-to-r ${challenge.color} text-white py-6 rounded-xl`}
                   >
-                    <Card className="p-3 bg-emerald-50 border-emerald-200">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-emerald-500 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
-                          <span className="text-sm">{index + 1}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900 truncate">
-                            {formatActionDetail(action)}
-                          </p>
-                        </div>
-                        <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                      </div>
-                    </Card>
-                  </motion.div>
-                ))}
+                    <Play className="w-5 h-5 mr-2" />
+                    {t.start}
+                  </Button>
+                )}
+
+                {challenge.status === "active" && !isCompleted && (
+                  <Button
+                    onClick={onClose}
+                    className={`w-full bg-gradient-to-r ${challenge.color} text-white py-6 rounded-xl`}
+                  >
+                    {t.continue}
+                  </Button>
+                )}
+
+                {challenge.status === "active" && isCompleted && (
+                  <Button
+                    onClick={handleComplete}
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-6 rounded-xl"
+                  >
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                    {t.completed}
+                  </Button>
+                )}
+
+                {challenge.status === "completed" && (
+                  <div className="text-center py-4">
+                    <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-2" />
+                    <p className="text-green-600">{t.coinsAwarded}</p>
+                  </div>
+                )}
+
+                <Button
+                  onClick={onClose}
+                  variant="outline"
+                  className="w-full py-4 rounded-xl"
+                >
+                  {t.close}
+                </Button>
               </div>
             </div>
-          )}
-
-          {/* Empty State */}
-          {challenge.status === "active" && challenge.completedActions.length === 0 && (
-            <Card className="p-6 text-center bg-gray-50 border-gray-200">
-              <motion.div
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                className="inline-block mb-3"
-              >
-                <TrendingUp className="w-12 h-12 text-gray-400" />
-              </motion.div>
-              <p className="text-gray-600 mb-1">
-                {language === "de"
-                  ? "Noch keine Aktionen abgeschlossen"
-                  : "No actions completed yet"}
-              </p>
-              <p className="text-sm text-gray-500">
-                {language === "de"
-                  ? `Öffne ${getActionName(challenge.actionType)}, um zu beginnen!`
-                  : `Open ${getActionName(challenge.actionType)} to get started!`}
-              </p>
-            </Card>
-          )}
-
-          {/* Tips */}
-          <Card className="p-4 bg-blue-50 border-blue-200">
-            <h4 className="text-sm text-blue-900 mb-2">
-              💡 {language === "de" ? "Tipp" : "Tip"}
-            </h4>
-            <p className="text-xs text-blue-700">
-              {language === "de"
-                ? "Jede abgeschlossene Aktion bringt dich der Challenge näher. Fortschritt wird automatisch getrackt!"
-                : "Each completed action brings you closer to the challenge. Progress is tracked automatically!"}
-            </p>
-          </Card>
-        </div>
-      </motion.div>
-    </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }

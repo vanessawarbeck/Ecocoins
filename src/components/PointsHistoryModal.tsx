@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, Coins, TrendingUp, TrendingDown, Calendar, Clock, Sparkles, Award, Leaf, Cookie, MapPin, Recycle, Coffee, Trophy, Users } from "lucide-react";
 import { Card } from "./ui/card";
 import { useEffect, useState } from "react";
+import { useDarkMode } from "../utils/DarkModeContext";
+import { getModalClasses } from "../utils/modalDarkModeClasses";
 
 export interface PointsTransaction {
   id: string;
@@ -47,6 +49,8 @@ const categoryColors = {
 };
 
 export function PointsHistoryModal({ isOpen, onClose }: PointsHistoryModalProps) {
+  const { isDarkMode } = useDarkMode();
+  const modalClasses = getModalClasses(isDarkMode);
   const [transactions, setTransactions] = useState<PointsTransaction[]>([]);
   const [totalEarned, setTotalEarned] = useState(0);
   const [totalSpent, setTotalSpent] = useState(0);
@@ -117,9 +121,13 @@ export function PointsHistoryModal({ isOpen, onClose }: PointsHistoryModalProps)
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute -top-2 -right-2 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition-colors"
+          className={`absolute -top-2 -right-2 z-10 rounded-full p-2 shadow-lg transition-colors ${
+            isDarkMode 
+              ? "bg-gray-700 hover:bg-gray-600 text-gray-200" 
+              : "bg-white hover:bg-gray-100 text-gray-600"
+          }`}
         >
-          <X className="w-5 h-5 text-gray-600" />
+          <X className="w-5 h-5" />
         </button>
 
         {/* Header */}
@@ -170,7 +178,7 @@ export function PointsHistoryModal({ isOpen, onClose }: PointsHistoryModalProps)
         </Card>
 
         {/* Transactions List */}
-        <div className="bg-white rounded-b-3xl shadow-xl overflow-y-auto max-h-[500px]">
+        <div className={`${modalClasses.containerRounded} shadow-xl overflow-y-auto max-h-[500px] rounded-b-3xl`}>
           {transactions.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
@@ -179,15 +187,27 @@ export function PointsHistoryModal({ isOpen, onClose }: PointsHistoryModalProps)
               className="p-12 text-center"
             >
               <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                className="inline-block mb-4"
+                animate={{
+                  scale: [1, 1.1, 1],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className={`w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center ${
+                  isDarkMode ? "bg-gray-700" : "bg-gray-100"
+                }`}
               >
-                <Coins className="w-16 h-16 text-gray-300" />
+                <Sparkles className={`w-10 h-10 ${
+                  isDarkMode ? "text-gray-500" : "text-gray-400"
+                }`} />
               </motion.div>
-              <p className="text-gray-500 mb-2">Noch keine Transaktionen</p>
-              <p className="text-sm text-gray-400">
-                Sammle Punkte durch Aktionen und sie werden hier angezeigt!
+              <p className={`mb-2 ${modalClasses.textPrimary}`}>
+                Noch keine Transaktionen
+              </p>
+              <p className={`text-sm ${modalClasses.textSecondary}`}>
+                Deine Punkte-Historie wird hier angezeigt
               </p>
             </motion.div>
           ) : (
@@ -204,7 +224,9 @@ export function PointsHistoryModal({ isOpen, onClose }: PointsHistoryModalProps)
                       animate={{ x: 0, opacity: 1 }}
                       transition={{ delay: index * 0.05 }}
                     >
-                      <Card className="p-4 hover:shadow-md transition-shadow border border-gray-100">
+                      <Card className={`p-4 hover:shadow-md transition-shadow border ${
+                        isDarkMode ? "border-gray-700" : "border-gray-100"
+                      }`}>
                         <div className="flex items-center gap-3">
                           {/* Icon */}
                           <motion.div
@@ -218,11 +240,11 @@ export function PointsHistoryModal({ isOpen, onClose }: PointsHistoryModalProps)
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1 min-w-0">
-                                <h4 className="text-gray-900 truncate">
+                                <h4 className={`truncate ${modalClasses.textPrimary}`}>
                                   {transaction.action}
                                 </h4>
                                 {transaction.description && (
-                                  <p className="text-xs text-gray-500 truncate">
+                                  <p className={`text-xs truncate ${modalClasses.textMuted}`}>
                                     {transaction.description}
                                   </p>
                                 )}
@@ -243,7 +265,7 @@ export function PointsHistoryModal({ isOpen, onClose }: PointsHistoryModalProps)
                             </div>
 
                             {/* Date & Time */}
-                            <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                            <div className={`flex items-center gap-3 mt-2 text-xs ${modalClasses.textMuted}`}>
                               <div className="flex items-center gap-1">
                                 <Calendar className="w-3 h-3" />
                                 <span>{formatDate(transaction.timestamp)}</span>

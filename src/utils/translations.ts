@@ -117,6 +117,10 @@ export interface Translations {
     emailNotifications: string;
     challengeReminders: string;
     environment: string;
+    friends: string;
+    friendsDesc: string;
+    legal: string;
+    legalDesc: string;
   };
   // Challenges
   challenges: {
@@ -166,6 +170,7 @@ export interface Translations {
     featuredChallenges: string;
     viewAll: string;
     recentNews: string;
+    popularWithStudents: string;
   };
   // Rewards
   rewards: {
@@ -227,6 +232,49 @@ export interface Translations {
     registered: string;
     eventRegistered: string;
     participateToEarn: string;
+  };
+  // Friends
+  friends: {
+    title: string;
+    subtitle: string;
+    myFriends: string;
+    addFriends: string;
+    searchFriends: string;
+    searchPlaceholder: string;
+    inviteFriends: string;
+    inviteDesc: string;
+    referralLink: string;
+    copyLink: string;
+    shareLink: string;
+    linkCopied: string;
+    noFriends: string;
+    noFriendsDesc: string;
+    sendRequest: string;
+    pending: string;
+    friends: string;
+    level: string;
+    addFriend: string;
+    inviteReward: string;
+  };
+  // Legal
+  legal: {
+    title: string;
+    subtitle: string;
+    imprint: string;
+    imprintDesc: string;
+    privacy: string;
+    privacyDesc: string;
+    terms: string;
+    termsDesc: string;
+    company: string;
+    address: string;
+    contact: string;
+    email: string;
+    phone: string;
+    representative: string;
+    registrationNumber: string;
+    taxId: string;
+    responsibleForContent: string;
   };
 }
 
@@ -311,7 +359,7 @@ export const translations: Record<Language, Translations> = {
       faculty: "Fakultät",
       yourBadges: "Deine Badges",
       recentActivities: "Letzte Aktivitäten",
-      yourImpact: "Dein Impact",
+      yourImpact: "Dein Beitrag",
       co2Saved: "CO₂ eingespart",
       waterSaved: "Wasser gespart",
       reusableUsed: "Mehrweg genutzt",
@@ -345,6 +393,10 @@ export const translations: Record<Language, Translations> = {
       emailNotifications: "E-Mail-Benachrichtigungen",
       challengeReminders: "Challenge-Erinnerungen",
       environment: "Gemeinsam für die Umwelt! 🌍",
+      friends: "Freunde",
+      friendsDesc: "Freunde verwalten und einladen",
+      legal: "Rechtliches",
+      legalDesc: "Impressum und rechtliche Informationen",
     },
     challenges: {
       title: "Challenges",
@@ -392,6 +444,7 @@ export const translations: Record<Language, Translations> = {
       featuredChallenges: "Empfohlene Challenges",
       viewAll: "Alle anzeigen",
       recentNews: "Neueste Nachrichten",
+      popularWithStudents: "Beliebt bei Studierenden",
     },
     rewards: {
       title: "Belohnungen",
@@ -450,11 +503,52 @@ export const translations: Record<Language, Translations> = {
       eventRegistered: "Erfolgreich angemeldet!",
       participateToEarn: "Teilnehmen und Coins verdienen",
     },
+    friends: {
+      title: "Friends",
+      subtitle: "Connect and collect points together",
+      myFriends: "My Friends",
+      addFriends: "Add Friends",
+      searchFriends: "Search Friends",
+      searchPlaceholder: "Enter name...",
+      inviteFriends: "Invite Friends",
+      inviteDesc: "Invite your friends and get rewards!",
+      referralLink: "Invitation Link",
+      copyLink: "Copy",
+      shareLink: "Share",
+      linkCopied: "Copied!",
+      noFriends: "No friends yet",
+      noFriendsDesc: "Invite friends or search for other users",
+      sendRequest: "Send Request",
+      pending: "Pending",
+      friends: "Friends",
+      level: "Level",
+      addFriend: "Add",
+      inviteReward: "Get 50 Eco Coins per invitation!",
+    },
+    legal: {
+      title: "Legal",
+      subtitle: "Imprint and legal information",
+      imprint: "Imprint",
+      imprintDesc: "Information about the provider",
+      privacy: "Privacy Policy",
+      privacyDesc: "How we protect your data",
+      terms: "Terms of Service",
+      termsDesc: "Conditions for app usage",
+      company: "Company",
+      address: "Address",
+      contact: "Contact",
+      email: "Email",
+      phone: "Phone",
+      representative: "Authorized Representative",
+      registrationNumber: "Commercial Register Number",
+      taxId: "VAT ID",
+      responsibleForContent: "Responsible for Content",
+    },
   },
   en: {
     nav: {
       home: "Home",
-      newsfeed: "Newsfeed",
+      newsfeed: "Newsfeed & Events",
       challenges: "Challenges",
       dashboard: "Dashboard",
       community: "Community",
@@ -565,6 +659,10 @@ export const translations: Record<Language, Translations> = {
       emailNotifications: "Email Notifications",
       challengeReminders: "Challenge Reminders",
       environment: "Together for the environment! 🌍",
+      friends: "Friends",
+      friendsDesc: "Friend management",
+      legal: "Legal",
+      legalDesc: "Imprint, Privacy Policy, and Terms of Service",
     },
     challenges: {
       title: "Challenges",
@@ -612,6 +710,7 @@ export const translations: Record<Language, Translations> = {
       featuredChallenges: "Featured Challenges",
       viewAll: "View all",
       recentNews: "Recent News",
+      popularWithStudents: "Popular with Students",
     },
     rewards: {
       title: "Rewards",
@@ -669,6 +768,47 @@ export const translations: Record<Language, Translations> = {
       registered: "Registered",
       eventRegistered: "Successfully registered!",
       participateToEarn: "Participate and earn coins",
+    },
+    friends: {
+      title: "Friends",
+      subtitle: "Connect and collect points together",
+      myFriends: "My Friends",
+      addFriends: "Add Friends",
+      searchFriends: "Search Friends",
+      searchPlaceholder: "Enter name...",
+      inviteFriends: "Invite Friends",
+      inviteDesc: "Invite your friends and get rewards!",
+      referralLink: "Invitation Link",
+      copyLink: "Copy",
+      shareLink: "Share",
+      linkCopied: "Copied!",
+      noFriends: "No friends yet",
+      noFriendsDesc: "Invite friends or search for other users",
+      sendRequest: "Send Request",
+      pending: "Pending",
+      friends: "Friends",
+      level: "Level",
+      addFriend: "Add",
+      inviteReward: "Get 50 Eco Coins per invitation!",
+    },
+    legal: {
+      title: "Legal",
+      subtitle: "Imprint and legal information",
+      imprint: "Imprint",
+      imprintDesc: "Information about the provider",
+      privacy: "Privacy Policy",
+      privacyDesc: "How we protect your data",
+      terms: "Terms of Service",
+      termsDesc: "Conditions for app usage",
+      company: "Company",
+      address: "Address",
+      contact: "Contact",
+      email: "Email",
+      phone: "Phone",
+      representative: "Authorized Representative",
+      registrationNumber: "Commercial Register Number",
+      taxId: "VAT ID",
+      responsibleForContent: "Responsible for Content",
     },
   },
 };

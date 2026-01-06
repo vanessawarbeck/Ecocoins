@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { useLanguage } from "../utils/LanguageContext";
+import { useDarkMode } from "../utils/DarkModeContext";
+import { getModalClasses } from "../utils/modalDarkModeClasses";
 import { useActivities } from "../utils/ActivityContext";
 import {
   LineChart,
@@ -31,6 +33,8 @@ export function CoinsProgressModal({
   totalCoins,
 }: CoinsProgressModalProps) {
   const { language } = useLanguage();
+  const { isDarkMode } = useDarkMode();
+  const modalClasses = getModalClasses(isDarkMode);
   const { activities } = useActivities();
   const [activePeriod, setActivePeriod] = useState<PeriodTab>("daily");
 
@@ -174,7 +178,9 @@ export function CoinsProgressModal({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed inset-x-4 top-20 bottom-20 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-2xl bg-white rounded-3xl shadow-2xl z-50 overflow-hidden flex flex-col"
+            className={`fixed inset-x-4 top-20 bottom-20 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-2xl rounded-3xl shadow-2xl z-50 overflow-hidden flex flex-col ${
+              isDarkMode ? "bg-gray-800" : "bg-white"
+            }`}
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-emerald-600 to-green-600 text-white p-6 flex-shrink-0">
@@ -208,12 +214,16 @@ export function CoinsProgressModal({
             </div>
 
             {/* Period Tabs */}
-            <div className="flex items-center gap-2 p-4 bg-gray-50 border-b flex-shrink-0">
+            <div className={`flex items-center gap-2 p-4 border-b flex-shrink-0 ${
+              isDarkMode ? "bg-gray-700" : "bg-gray-50"
+            }`}>
               <Button
                 size="sm"
                 className={`flex-1 ${
                   activePeriod === "daily"
                     ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                    : isDarkMode
+                    ? "bg-gray-600 text-gray-200 hover:bg-gray-500"
                     : "bg-white text-gray-700 hover:bg-gray-100"
                 }`}
                 onClick={() => setActivePeriod("daily")}
@@ -225,6 +235,8 @@ export function CoinsProgressModal({
                 className={`flex-1 ${
                   activePeriod === "weekly"
                     ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                    : isDarkMode
+                    ? "bg-gray-600 text-gray-200 hover:bg-gray-500"
                     : "bg-white text-gray-700 hover:bg-gray-100"
                 }`}
                 onClick={() => setActivePeriod("weekly")}
@@ -236,6 +248,8 @@ export function CoinsProgressModal({
                 className={`flex-1 ${
                   activePeriod === "monthly"
                     ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                    : isDarkMode
+                    ? "bg-gray-600 text-gray-200 hover:bg-gray-500"
                     : "bg-white text-gray-700 hover:bg-gray-100"
                 }`}
                 onClick={() => setActivePeriod("monthly")}
@@ -248,29 +262,47 @@ export function CoinsProgressModal({
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {/* Statistics Cards */}
               <div className="grid grid-cols-2 gap-3">
-                <Card className="p-3 bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200">
-                  <p className="text-xs text-gray-600 mb-1">
+                <Card className={`p-3 border ${
+                  isDarkMode 
+                    ? "bg-gradient-to-br from-emerald-900/40 to-green-900/40 border-emerald-700" 
+                    : "bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200"
+                }`}>
+                  <p className={`text-xs mb-1 ${
+                    isDarkMode ? "text-gray-300" : "text-gray-600"
+                  }`}>
                     {language === "de" ? "Gesamt" : "Total"}
                   </p>
-                  <p className="text-xl text-emerald-600">
+                  <p className={`text-xl ${
+                    isDarkMode ? "text-emerald-400" : "text-emerald-600"
+                  }`}>
                     {stats.periodTotal.toLocaleString()}
                   </p>
                 </Card>
-                <Card className="p-3 bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
-                  <p className="text-xs text-gray-600 mb-1">
+                <Card className={`p-3 border ${
+                  isDarkMode 
+                    ? "bg-gradient-to-br from-amber-900/40 to-orange-900/40 border-amber-700" 
+                    : "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200"
+                }`}>
+                  <p className={`text-xs mb-1 ${
+                    isDarkMode ? "text-gray-300" : "text-gray-600"
+                  }`}>
                     {language === "de" ? "Max" : "Max"}
                   </p>
-                  <p className="text-xl text-amber-600">
+                  <p className={`text-xl ${
+                    isDarkMode ? "text-amber-400" : "text-amber-600"
+                  }`}>
                     {stats.max.toLocaleString()}
                   </p>
                 </Card>
               </div>
 
               {/* Chart */}
-              <Card className="p-4">
+              <Card className={`p-4 ${isDarkMode ? "bg-gray-700 border-gray-600" : ""}`}>
                 <div className="mb-3">
-                  <h3 className="text-gray-900 flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-emerald-600" />
+                  <h3 className={`flex items-center gap-2 ${modalClasses.textPrimary}`}>
+                    <Calendar className={`w-5 h-5 ${
+                      isDarkMode ? "text-emerald-400" : "text-emerald-600"
+                    }`} />
                     {activePeriod === "daily" &&
                       (language === "de"
                         ? "Letzte 7 Tage"
@@ -289,20 +321,21 @@ export function CoinsProgressModal({
                 <ResponsiveContainer width="100%" height={250}>
                   {activePeriod === "daily" ? (
                     <BarChart data={getCurrentData()}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? "#4b5563" : "#e5e7eb"} />
                       <XAxis
                         dataKey="label"
-                        tick={{ fill: "#6b7280", fontSize: 12 }}
+                        tick={{ fill: isDarkMode ? "#9ca3af" : "#6b7280", fontSize: 12 }}
                       />
-                      <YAxis tick={{ fill: "#6b7280", fontSize: 12 }} />
+                      <YAxis tick={{ fill: isDarkMode ? "#9ca3af" : "#6b7280", fontSize: 12 }} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "#fff",
-                          border: "1px solid #d1d5db",
+                          backgroundColor: isDarkMode ? "#374151" : "#fff",
+                          border: `1px solid ${isDarkMode ? "#4b5563" : "#d1d5db"}`,
                           borderRadius: "8px",
                           fontSize: "14px",
+                          color: isDarkMode ? "#f3f4f6" : "#374151",
                         }}
-                        labelStyle={{ color: "#374151" }}
+                        labelStyle={{ color: isDarkMode ? "#f3f4f6" : "#374151" }}
                       />
                       <Bar
                         dataKey="coins"
@@ -312,20 +345,21 @@ export function CoinsProgressModal({
                     </BarChart>
                   ) : (
                     <LineChart data={getCurrentData()}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? "#4b5563" : "#e5e7eb"} />
                       <XAxis
                         dataKey="label"
-                        tick={{ fill: "#6b7280", fontSize: 12 }}
+                        tick={{ fill: isDarkMode ? "#9ca3af" : "#6b7280", fontSize: 12 }}
                       />
-                      <YAxis tick={{ fill: "#6b7280", fontSize: 12 }} />
+                      <YAxis tick={{ fill: isDarkMode ? "#9ca3af" : "#6b7280", fontSize: 12 }} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "#fff",
-                          border: "1px solid #d1d5db",
+                          backgroundColor: isDarkMode ? "#374151" : "#fff",
+                          border: `1px solid ${isDarkMode ? "#4b5563" : "#d1d5db"}`,
                           borderRadius: "8px",
                           fontSize: "14px",
+                          color: isDarkMode ? "#f3f4f6" : "#374151",
                         }}
-                        labelStyle={{ color: "#374151" }}
+                        labelStyle={{ color: isDarkMode ? "#f3f4f6" : "#374151" }}
                       />
                       <Line
                         type="monotone"
@@ -341,14 +375,20 @@ export function CoinsProgressModal({
               </Card>
 
               {/* Period Summary */}
-              <Card className="p-4 bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200">
-                <h3 className="text-gray-900 mb-3 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-emerald-600" />
+              <Card className={`p-4 border ${
+                isDarkMode 
+                  ? "bg-gradient-to-br from-emerald-900/30 to-green-900/30 border-emerald-700" 
+                  : "bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200"
+              }`}>
+                <h3 className={`mb-3 flex items-center gap-2 ${modalClasses.textPrimary}`}>
+                  <TrendingUp className={`w-5 h-5 ${
+                    isDarkMode ? "text-emerald-400" : "text-emerald-600"
+                  }`} />
                   {language === "de" ? "Zusammenfassung" : "Summary"}
                 </h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">
+                    <span className={modalClasses.textSecondary}>
                       {activePeriod === "daily" &&
                         (language === "de"
                           ? "Heute"
@@ -362,15 +402,15 @@ export function CoinsProgressModal({
                           ? "Dieser Monat"
                           : "This month")}
                     </span>
-                    <span className="text-emerald-600">
+                    <span className={isDarkMode ? "text-emerald-400" : "text-emerald-600"}>
                       {stats.current.toLocaleString()} Coins
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">
+                    <span className={modalClasses.textSecondary}>
                       {language === "de" ? "Gesamt seit Start" : "Total since start"}
                     </span>
-                    <span className="text-emerald-600">
+                    <span className={isDarkMode ? "text-emerald-400" : "text-emerald-600"}>
                       {totalCoins.toLocaleString()} Coins
                     </span>
                   </div>
@@ -378,14 +418,18 @@ export function CoinsProgressModal({
               </Card>
 
               {/* Tips Card */}
-              <Card className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
-                <h3 className="text-gray-900 mb-2">
+              <Card className={`p-4 border ${
+                isDarkMode 
+                  ? "bg-gradient-to-br from-blue-900/30 to-cyan-900/30 border-blue-700" 
+                  : "bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200"
+              }`}>
+                <h3 className={`mb-2 ${modalClasses.textPrimary}`}>
                   💡{" "}
                   {language === "de"
                     ? "Tipp zur Steigerung"
                     : "Tip to increase"}
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className={`text-sm ${modalClasses.textSecondary}`}>
                   {activePeriod === "daily" &&
                     (language === "de"
                       ? "Versuche jeden Tag mindestens eine Challenge abzuschließen, um kontinuierlich Coins zu sammeln!"
@@ -403,7 +447,9 @@ export function CoinsProgressModal({
             </div>
 
             {/* Footer */}
-            <div className="p-4 bg-gray-50 border-t flex-shrink-0">
+            <div className={`p-4 border-t flex-shrink-0 ${
+              isDarkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50"
+            }`}>
               <Button
                 onClick={onClose}
                 className="w-full bg-emerald-500 hover:bg-emerald-600"

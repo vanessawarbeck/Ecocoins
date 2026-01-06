@@ -244,10 +244,9 @@ export function ActionsPage() {
           className="bg-gradient-to-r from-emerald-600 to-green-600 text-white p-6 rounded-b-3xl shadow-lg mb-4"
         >
           <div className="flex items-center gap-3 mb-2">
-            <Leaf className="w-8 h-8" />
             <h1 className="text-2xl">Nachhaltigkeits-Aktionen</h1>
           </div>
-          <p className="text-emerald-100 text-sm">
+          <p className="text-white/90 text-sm">
             Wähle eine Aktion und sammle Eco Coins!
           </p>
         </motion.div>

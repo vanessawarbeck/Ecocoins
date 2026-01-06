@@ -1,58 +1,153 @@
 import { motion } from "motion/react";
 import { useState, useEffect } from "react";
-import { Settings, Globe, Bell, Shield, Info, Check, User, Edit2, Save, X, ChevronRight } from "lucide-react";
+import { Settings, Globe, Bell, Shield, Info, Check, User, Edit2, Save, X, ChevronRight, Scale, RotateCcw, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Card } from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
+import { AlertDialog } from "./ui/AlertDialog";
 import { useLanguage } from "../utils/LanguageContext";
-import { LanguageSettingsModal } from "./LanguageSettingsModal";
-import type { Language } from "../utils/translations";
+import { LegalPage } from "./LegalPage";
+
+
 
 export function SettingsPage() {
   const { language, setLanguage, t } = useLanguage();
-  const [editingPersonalData, setEditingPersonalData] = useState(false);
-  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showLegalPage, setShowLegalPage] = useState(false);
+
+  // Alert Dialog state
+  const [alertDialog, setAlertDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    type: "info" | "warning" | "success" | "confirm";
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    type: "info",
+  });
+
+  // Account settings
+  const [userEmail, setUserEmail] = useState("");
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [editEmail, setEditEmail] = useState("");
+  
+  const [isEditingPassword, setIsEditingPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [notificationSettings, setNotificationSettings] = useState({
     push: true,
     email: true,
     challengeReminders: true,
   });
 
-  // Personal data
-  const [personalData, setPersonalData] = useState({
-    name: "",
-    studyProgram: "",
-    semester: "",
-  });
-
-  const [editData, setEditData] = useState({ ...personalData });
-
+  // Load email from localStorage
   useEffect(() => {
-    const name = localStorage.getItem("userName") || "Max Studierender";
-    const studyProgram = localStorage.getItem("userStudyProgram") || "Informatik";
-    const semester = localStorage.getItem("userSemester") || "3";
-    
-    setPersonalData({ name, studyProgram, semester });
-    setEditData({ name, studyProgram, semester });
+    const savedEmail = localStorage.getItem("userEmail");
+    if (savedEmail) {
+      setUserEmail(savedEmail);
+      setEditEmail(savedEmail);
+    }
   }, []);
 
-  const handleLanguageChange = (lang: Language) => {
-    setLanguage(lang);
+  const handleSaveEmail = () => {
+    if (editEmail && editEmail.includes("@")) {
+      setUserEmail(editEmail);
+      localStorage.setItem("userEmail", editEmail);
+      setIsEditingEmail(false);
+    } else {
+      setAlertDialog({
+        isOpen: true,
+        title: language === "de" ? "Ungültige E-Mail" : "Invalid Email",
+        description: language === "de" ? "Bitte gib eine gültige E-Mail-Adresse ein." : "Please enter a valid email address.",
+        type: "warning",
+        confirmText: "OK",
+      });
+    }
   };
 
-  const handleSavePersonalData = () => {
-    localStorage.setItem("userName", editData.name);
-    localStorage.setItem("userStudyProgram", editData.studyProgram);
-    localStorage.setItem("userSemester", editData.semester);
-    setPersonalData(editData);
-    setEditingPersonalData(false);
+  const handleCancelEmailEdit = () => {
+    setEditEmail(userEmail);
+    setIsEditingEmail(false);
   };
 
-  const handleCancelEdit = () => {
-    setEditData(personalData);
-    setEditingPersonalData(false);
+  const handleSavePassword = () => {
+    const savedPassword = localStorage.getItem("userPassword");
+    
+    // Validate current password
+    if (savedPassword && currentPassword !== savedPassword) {
+      setAlertDialog({
+        isOpen: true,
+        title: language === "de" ? "Falsches Passwort" : "Incorrect Password",
+        description: language === "de" ? "Das aktuelle Passwort ist falsch." : "Current password is incorrect.",
+        type: "warning",
+        confirmText: "OK",
+      });
+      return;
+    }
+    
+    // Validate new password
+    if (newPassword.length < 6) {
+      setAlertDialog({
+        isOpen: true,
+        title: language === "de" ? "Passwort zu kurz" : "Password Too Short",
+        description: language === "de" ? "Das neue Passwort muss mindestens 6 Zeichen lang sein." : "New password must be at least 6 characters long.",
+        type: "warning",
+        confirmText: "OK",
+      });
+      return;
+    }
+    
+    // Validate password match
+    if (newPassword !== confirmPassword) {
+      setAlertDialog({
+        isOpen: true,
+        title: language === "de" ? "Passwörter stimmen nicht überein" : "Passwords Don't Match",
+        description: language === "de" ? "Die Passwörter stimmen nicht überein." : "Passwords do not match.",
+        type: "warning",
+        confirmText: "OK",
+      });
+      return;
+    }
+    
+    // Save new password
+    localStorage.setItem("userPassword", newPassword);
+    
+    // Reset form
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setIsEditingPassword(false);
+    
+    setAlertDialog({
+      isOpen: true,
+      title: language === "de" ? "Erfolgreich" : "Success",
+      description: language === "de" ? "Passwort erfolgreich geändert!" : "Password changed successfully!",
+      type: "success",
+      confirmText: "OK",
+    });
   };
+
+  const handleCancelPasswordEdit = () => {
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setIsEditingPassword(false);
+  };
+
+  // Show Legal Page
+  if (showLegalPage) {
+    return <LegalPage onBack={() => setShowLegalPage(false)} />;
+  }
 
   return (
     <div className="min-h-screen pb-20">
@@ -60,127 +155,199 @@ export function SettingsPage() {
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="bg-gradient-to-r from-emerald-600 to-green-600 text-white p-6 rounded-b-3xl shadow-lg mb-4"
+        className="bg-gradient-to-r from-[#FF5757] via-[#FF8B8B] to-gray-600 text-white p-6 rounded-b-3xl shadow-lg mb-4"
       >
         <div className="flex items-center gap-3 mb-2">
           <Settings className="w-8 h-8" />
           <h1 className="text-2xl">{t.settings.title}</h1>
         </div>
-        <p className="text-emerald-100 text-sm">
+        <p className="text-white/90 text-sm">
           {t.language === "de" ? "Personalisiere deine App" : "Personalize your app"}
         </p>
       </motion.div>
 
       <div className="p-4 space-y-3">
-        {/* Personal Data */}
+        {/* Email Settings */}
+        <motion.div
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.03 }}
+        >
+          <Card className="p-4 bg-white border-emerald-100 shadow-md">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-rose-600 rounded-full flex items-center justify-center">
+                <Mail className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-gray-900">
+                  {language === "de" ? "E-Mail-Adresse" : "Email Address"}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  {language === "de" ? "Deine Kontakt-E-Mail" : "Your contact email"}
+                </p>
+              </div>
+              {!isEditingEmail && (
+                <button
+                  onClick={() => setIsEditingEmail(true)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <Edit2 className="w-4 h-4 text-gray-600" />
+                </button>
+              )}
+            </div>
+
+            {isEditingEmail ? (
+              <div className="space-y-3">
+                <Input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  placeholder="ihre.email@beispiel.de"
+                  className="w-full"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSaveEmail}
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {language === "de" ? "Speichern" : "Save"}
+                  </Button>
+                  <Button
+                    onClick={handleCancelEmailEdit}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    {language === "de" ? "Abbrechen" : "Cancel"}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-700">
+                  {userEmail || (language === "de" ? "Keine E-Mail hinterlegt" : "No email set")}
+                </p>
+              </div>
+            )}
+          </Card>
+        </motion.div>
+
+        {/* Password Settings */}
+        <motion.div
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.04 }}
+        >
+          <Card className="p-4 bg-white border-emerald-100 shadow-md">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center">
+                <Lock className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-gray-900">
+                  {language === "de" ? "Passwort" : "Password"}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  {language === "de" ? "Ändere dein Passwort" : "Change your password"}
+                </p>
+              </div>
+              {!isEditingPassword && (
+                <button
+                  onClick={() => setIsEditingPassword(true)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <Edit2 className="w-4 h-4 text-gray-600" />
+                </button>
+              )}
+            </div>
+
+            {isEditingPassword ? (
+              <div className="space-y-3">
+                <div className="relative">
+                  <Input
+                    type={showCurrentPassword ? "text" : "password"}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder={language === "de" ? "Aktuelles Passwort" : "Current password"}
+                    className="w-full pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                
+                <div className="relative">
+                  <Input
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder={language === "de" ? "Neues Passwort" : "New password"}
+                    className="w-full pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                
+                <div className="relative">
+                  <Input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder={language === "de" ? "Passwort bestätigen" : "Confirm password"}
+                    className="w-full pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSavePassword}
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {language === "de" ? "Speichern" : "Save"}
+                  </Button>
+                  <Button
+                    onClick={handleCancelPasswordEdit}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    {language === "de" ? "Abbrechen" : "Cancel"}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-700">••••••••</p>
+              </div>
+            )}
+          </Card>
+        </motion.div>
+
+        {/* Language Settings - Read Only */}
         <motion.div
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ delay: 0.05 }}
         >
           <Card className="p-4 bg-white border-emerald-100 shadow-md">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-gray-900">{t.settings.personalData}</h3>
-                <p className="text-xs text-gray-500">{t.settings.personalDataDesc}</p>
-              </div>
-              {!editingPersonalData && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setEditingPersonalData(true)}
-                  className="text-emerald-600 hover:text-emerald-700"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-
-            {!editingPersonalData ? (
-              <div className="space-y-2 pl-13">
-                <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                  <span className="text-sm text-gray-600">{t.profile.name}</span>
-                  <span className="text-gray-900">{personalData.name}</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                  <span className="text-sm text-gray-600">{t.onboarding.studyProgram}</span>
-                  <span className="text-gray-900">{personalData.studyProgram}</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-sm text-gray-600">{t.onboarding.semester}</span>
-                  <span className="text-gray-900">{personalData.semester}. {t.onboarding.semester}</span>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div>
-                  <Label htmlFor="edit-name" className="text-gray-700 text-sm">
-                    {t.profile.name}
-                  </Label>
-                  <Input
-                    id="edit-name"
-                    value={editData.name}
-                    onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-program" className="text-gray-700 text-sm">
-                    {t.onboarding.studyProgram}
-                  </Label>
-                  <Input
-                    id="edit-program"
-                    value={editData.studyProgram}
-                    onChange={(e) => setEditData({ ...editData, studyProgram: e.target.value })}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-semester" className="text-gray-700 text-sm">
-                    {t.onboarding.semester}
-                  </Label>
-                  <Input
-                    id="edit-semester"
-                    value={editData.semester}
-                    onChange={(e) => setEditData({ ...editData, semester: e.target.value })}
-                    className="mt-1"
-                  />
-                </div>
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    onClick={handleSavePersonalData}
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    {t.common.save}
-                  </Button>
-                  <Button
-                    onClick={handleCancelEdit}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    {t.common.cancel}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </Card>
-        </motion.div>
-
-        {/* Language Settings */}
-        <motion.div
-          initial={{ x: -20, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card 
-            className="p-4 bg-white border-emerald-100 shadow-md cursor-pointer hover:bg-blue-50 transition-colors"
-            onClick={() => setShowLanguageModal(true)}
-          >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
                 <Globe className="w-5 h-5 text-white" />
@@ -191,7 +358,9 @@ export function SettingsPage() {
                   {language === "de" ? "Deutsch" : "English"}
                 </p>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-400" />
+              <div className="text-xs text-gray-400">
+                {language === "de" ? "Beim Onboarding festgelegt" : "Set during onboarding"}
+              </div>
             </div>
           </Card>
         </motion.div>
@@ -200,7 +369,7 @@ export function SettingsPage() {
         <motion.div
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.1 }}
         >
           <Card className="p-4 bg-white border-emerald-100 shadow-md">
             <div className="flex items-center gap-3 mb-4">
@@ -284,11 +453,69 @@ export function SettingsPage() {
           </Card>
         </motion.div>
 
+        {/* Onboarding Reset */}
+        <motion.div
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.25 }}
+          onClick={() => {
+            setAlertDialog({
+              isOpen: true,
+              title: language === "de" ? "Onboarding zurücksetzen" : "Reset Onboarding",
+              description: language === "de" ? "Möchtest du wirklich das Onboarding und ALLE Daten zurücksetzen? Diese Aktion kann nicht rückgängig gemacht werden!" : "Do you really want to reset the onboarding and ALL data? This action cannot be undone!",
+              type: "confirm",
+              confirmText: language === "de" ? "Zurücksetzen" : "Reset",
+              cancelText: language === "de" ? "Abbrechen" : "Cancel",
+              onConfirm: () => {
+                // Clear all localStorage data
+                localStorage.clear();
+                
+                // Reload the app
+                window.location.reload();
+              }
+            });
+          }}
+        >
+          <Card className="p-4 bg-white border-blue-100 shadow-md cursor-pointer hover:bg-blue-50 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                <RotateCcw className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-gray-900">{t.profile.resetOnboarding}</h3>
+                <p className="text-xs text-gray-500">{t.profile.resetOnboardingDesc}</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Legal */}
+        <motion.div
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          onClick={() => setShowLegalPage(true)}
+        >
+          <Card className="p-4 bg-white border-emerald-100 shadow-md cursor-pointer hover:bg-emerald-50 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-slate-500 to-slate-600 rounded-full flex items-center justify-center">
+                <Scale className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-gray-900">{t.legal.title}</h3>
+                <p className="text-xs text-gray-500">{t.settings.legalDesc}</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </div>
+          </Card>
+        </motion.div>
+
         {/* About */}
         <motion.div
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.35 }}
         >
           <Card className="p-4 bg-white border-emerald-100 shadow-md cursor-pointer hover:bg-emerald-50 transition-colors">
             <div className="flex items-center gap-3">
@@ -321,10 +548,16 @@ export function SettingsPage() {
         </motion.div>
       </div>
 
-      {/* Language Settings Modal */}
-      <LanguageSettingsModal
-        isOpen={showLanguageModal}
-        onClose={() => setShowLanguageModal(false)}
+      {/* Alert Dialog */}
+      <AlertDialog
+        isOpen={alertDialog.isOpen}
+        title={alertDialog.title}
+        description={alertDialog.description}
+        type={alertDialog.type}
+        confirmText={alertDialog.confirmText}
+        cancelText={alertDialog.cancelText}
+        onConfirm={alertDialog.onConfirm}
+        onClose={() => setAlertDialog({ isOpen: false, title: "", description: "", type: "info" })}
       />
     </div>
   );

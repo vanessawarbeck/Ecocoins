@@ -8,6 +8,7 @@ import { Sparkles, RefreshCw, X, Coins, Lock } from "lucide-react";
 import { PointsAnimation } from "./PointsAnimation";
 import { addPointsTransaction } from "./PointsHistoryModal";
 import { useLanguage } from "../utils/LanguageContext";
+import { useDarkMode } from "../utils/DarkModeContext";
 import { getEcoTips, getCookieTranslations, type EcoTip } from "../utils/cookieData";
 
 type CookieState = "unopened" | "cracking" | "opened";
@@ -19,6 +20,7 @@ interface EcoCookieModalProps {
 
 export function EcoCookieModal({ isOpen, onClose }: EcoCookieModalProps) {
   const { language } = useLanguage();
+  const { isDarkMode } = useDarkMode();
   const [state, setState] = useState<CookieState>("unopened");
   const [currentTip, setCurrentTip] = useState<EcoTip | null>(null);
   const [alreadyOpened, setAlreadyOpened] = useState(false);
@@ -115,12 +117,20 @@ export function EcoCookieModal({ isOpen, onClose }: EcoCookieModalProps) {
           {/* Close Button */}
           <button
             onClick={handleClose}
-            className="absolute -top-2 -right-2 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition-colors"
+            className={`absolute -top-2 -right-2 z-10 rounded-full p-2 shadow-lg transition-colors ${
+              isDarkMode 
+                ? "bg-gray-700 hover:bg-gray-600 text-gray-200" 
+                : "bg-white hover:bg-gray-100 text-gray-600"
+            }`}
           >
-            <X className="w-5 h-5 text-gray-600" />
+            <X className="w-5 h-5" />
           </button>
 
-          <div className="bg-gradient-to-br from-emerald-50 to-green-100 rounded-3xl p-6 min-h-[400px] flex items-center justify-center">
+          <div className={`rounded-3xl p-6 min-h-[400px] flex items-center justify-center ${
+            isDarkMode 
+              ? "bg-gradient-to-br from-emerald-900/90 to-green-900/90" 
+              : "bg-gradient-to-br from-emerald-50 to-green-100"
+          }`}>
             <AnimatePresence mode="wait">
               {state === "unopened" && !alreadyOpened ? (
                 <motion.div
@@ -196,10 +206,14 @@ export function EcoCookieModal({ isOpen, onClose }: EcoCookieModalProps) {
                     transition={{ delay: 0.5 }}
                     className="text-center"
                   >
-                    <h2 className="text-2xl text-emerald-800 mb-2">
+                    <h2 className={`text-2xl mb-2 ${
+                      isDarkMode ? "text-emerald-200" : "text-emerald-800"
+                    }`}>
                       {texts.ecoTipTitle}
                     </h2>
-                    <p className="text-emerald-600 mb-4">
+                    <p className={`mb-4 ${
+                      isDarkMode ? "text-emerald-300" : "text-emerald-600"
+                    }`}>
                       {texts.tapCookie}
                     </p>
 
@@ -212,10 +226,18 @@ export function EcoCookieModal({ isOpen, onClose }: EcoCookieModalProps) {
                         repeat: Infinity,
                         ease: "easeInOut",
                       }}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100/80 backdrop-blur-sm border border-emerald-200"
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-sm border ${
+                        isDarkMode 
+                          ? "bg-emerald-800/40 border-emerald-700" 
+                          : "bg-emerald-100/80 border-emerald-200"
+                      }`}
                     >
-                      <Sparkles className="w-4 h-4 text-emerald-600" />
-                      <span className="text-sm text-emerald-700">
+                      <Sparkles className={`w-4 h-4 ${
+                        isDarkMode ? "text-emerald-400" : "text-emerald-600"
+                      }`} />
+                      <span className={`text-sm ${
+                        isDarkMode ? "text-emerald-200" : "text-emerald-700"
+                      }`}>
                         {texts.sustainabilityTipWaits}
                       </span>
                     </motion.div>
@@ -279,7 +301,9 @@ export function EcoCookieModal({ isOpen, onClose }: EcoCookieModalProps) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: [0, 1, 0.7, 1] }}
                     transition={{ duration: 2 }}
-                    className="text-emerald-700 text-center"
+                    className={`text-center ${
+                      isDarkMode ? "text-emerald-300" : "text-emerald-700"
+                    }`}
                   >
                     {texts.loadingTip}
                   </motion.p>
@@ -297,7 +321,11 @@ export function EcoCookieModal({ isOpen, onClose }: EcoCookieModalProps) {
                   }}
                   className="w-full"
                 >
-                  <Card className="p-6 bg-white/95 backdrop-blur-sm border-emerald-200 shadow-xl">
+                  <Card className={`p-6 backdrop-blur-sm border shadow-xl ${
+                    isDarkMode 
+                      ? "bg-gray-800/95 border-emerald-700" 
+                      : "bg-white/95 border-emerald-200"
+                  }`}>
                     <motion.div
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
@@ -332,7 +360,9 @@ export function EcoCookieModal({ isOpen, onClose }: EcoCookieModalProps) {
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.7 }}
-                        className="text-xl text-emerald-800 mb-2"
+                        className={`text-xl mb-2 ${
+                          isDarkMode ? "text-emerald-200" : "text-emerald-800"
+                        }`}
                       >
                         {texts.yourTip}
                       </motion.h2>
@@ -342,12 +372,12 @@ export function EcoCookieModal({ isOpen, onClose }: EcoCookieModalProps) {
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: 0.6 }}
-                      className="text-center text-gray-700 mb-6 italic leading-relaxed px-2"
+                      className={`text-center mb-6 italic leading-relaxed px-2 ${
+                        isDarkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
                     >
                       "{currentTip.tip}"
                     </motion.blockquote>
-
-                    {/* Removed Bonus Points Display and Refresh Button */}
                   </Card>
                 </motion.div>
               ) : null}

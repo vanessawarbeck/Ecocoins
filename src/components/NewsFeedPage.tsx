@@ -1,430 +1,322 @@
 import { motion } from "motion/react";
-import { Newspaper, Heart, MessageCircle, Share2, Bookmark, TrendingUp, Calendar, CheckCircle2 } from "lucide-react";
+import { Newspaper, Calendar, Search } from "lucide-react";
 import { Card } from "./ui/card";
-import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { useState } from "react";
+import { Badge } from "./ui/badge";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../utils/LanguageContext";
-import { toast } from "sonner@2.0.3";
-import { useActivities } from "../utils/ActivityContext";
-import { updateChallengeProgress } from "../utils/challengeManager";
+import { NewsPostCard } from "./NewsPostCard";
+import { CommentsModal } from "./CommentsModal";
+import { EventDetailModal } from "./EventDetailModal";
+import { getNewsPosts, SAMPLE_EVENTS, type NewsPost, type Event } from "../utils/newsData";
+import headerImage from "figma:asset/5d0f3dc1c633ba6079e841ca17a8b974a867d509.png";
 
-interface NewsItem {
-  id: number;
-  title: string;
-  titleEn: string;
-  content: string;
-  contentEn: string;
-  category: string;
-  categoryEn: string;
-  icon: string;
-  image?: string;
-  author: string;
-  authorEn: string;
-  time: string;
-  timeEn: string;
-  likes: number;
-  comments: number;
-  color: string;
-  isEvent?: boolean;
-  eventDate?: string;
-  eventDateEn?: string;
-  eventLocation?: string;
-  eventLocationEn?: string;
-  eventCoins?: number;
-}
+type Tab = "news" | "events";
 
 export function NewsFeedPage() {
-  const [likedPosts, setLikedPosts] = useState<number[]>([]);
-  const [savedPosts, setSavedPosts] = useState<number[]>([]);
-  const [registeredEvents, setRegisteredEvents] = useState<number[]>(() => {
-    const saved = localStorage.getItem("registeredEvents");
-    return saved ? JSON.parse(saved) : [];
+  const { language } = useLanguage();
+  const [activeTab, setActiveTab] = useState<Tab>("news");
+  const [newsPosts, setNewsPosts] = useState<NewsPost[]>([]);
+  const [events] = useState<Event[]>(SAMPLE_EVENTS);
+  const [selectedPost, setSelectedPost] = useState<NewsPost | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    loadNews();
+  }, []);
+
+  const loadNews = () => {
+    setNewsPosts(getNewsPosts());
+  };
+
+  const texts = {
+    de: {
+      title: "Newsfeed & Events",
+      subtitle: "Bleib informiert und vernetzt",
+      news: "Newsfeed",
+      events: "Events",
+      trending: "Trending",
+      all: "Alle",
+      search: "Suchen...",
+      noNews: "Keine Beiträge",
+      noNewsDesc: "Schau später wieder vorbei!",
+      noEvents: "Keine Events",
+      noEventsDesc: "Momentan sind keine Events geplant",
+      upcomingEvents: "Kommende Events",
+      participants: "Teilnehmer",
+      full: "Ausgebucht",
+      availableSpots: "Plätze verfügbar",
+    },
+    en: {
+      title: "Newsfeed & Events",
+      subtitle: "Stay informed and connected",
+      news: "Newsfeed",
+      events: "Events",
+      trending: "Trending",
+      all: "All",
+      search: "Search...",
+      noNews: "No posts",
+      noNewsDesc: "Check back later!",
+      noEvents: "No events",
+      noEventsDesc: "No events scheduled at the moment",
+      upcomingEvents: "Upcoming Events",
+      participants: "Participants",
+      full: "Full",
+      availableSpots: "spots available",
+    },
+  };
+
+  const t = texts[language];
+
+  // Filter news posts
+  const filteredNews = newsPosts.filter((post) => {
+    const content = language === "de" ? post.contentDe : post.contentEn;
+    const matchesSearch = content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         post.authorName.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSearch;
   });
-  const { t, language } = useLanguage();
-  const { addActivity } = useActivities();
 
-  const news: NewsItem[] = [
-    {
-      id: 1,
-      title: "Neuer Recycling-Rekord am Campus!",
-      titleEn: "New Recycling Record on Campus!",
-      content: "Diese Woche haben Studierende und Mitarbeitende zusammen über 500kg Recycling-Material gesammelt. Das ist ein neuer Rekord! 🎉",
-      contentEn: "This week students and staff collected over 500kg of recyclable materials together. That's a new record! 🎉",
-      category: "Erfolg",
-      categoryEn: "Success",
-      icon: "♻️",
-      author: "Nachhaltigkeitsteam",
-      authorEn: "Sustainability Team",
-      time: "vor 2 Stunden",
-      timeEn: "2 hours ago",
-      likes: 156,
-      comments: 23,
-      color: "from-green-500 to-emerald-600",
-    },
-    {
-      id: 2,
-      title: "Fahrrad-Challenge startet nächste Woche",
-      titleEn: "Bike Challenge Starts Next Week",
-      content: "Ab Montag läuft die große Fahrrad-Challenge! Sammle extra Punkte und gewinne tolle Preise. Melde dich jetzt an!",
-      contentEn: "Starting Monday, the big bike challenge begins! Collect extra points and win great prizes. Sign up now!",
-      category: "Challenge",
-      categoryEn: "Challenge",
-      icon: "🚴",
-      author: "Events Team",
-      authorEn: "Events Team",
-      time: "vor 5 Stunden",
-      timeEn: "5 hours ago",
-      likes: 234,
-      comments: 45,
-      color: "from-blue-500 to-blue-600",
-    },
-    {
-      id: 3,
-      title: "Neue Mehrweg-Automaten in der Mensa",
-      titleEn: "New Reusable Vending Machines in the Cafeteria",
-      content: "Die Mensa hat neue Mehrweg-Automaten installiert! Hol dir deinen Becher ab und spare Plastikmüll. Die ersten 100 Nutzer bekommen 20 Bonus-Coins!",
-      contentEn: "The cafeteria has installed new reusable vending machines! Get your cup and save plastic waste. The first 100 users get 20 bonus coins!",
-      category: "News",
-      categoryEn: "News",
-      icon: "🥤",
-      author: "Campus News",
-      authorEn: "Campus News",
-      time: "vor 1 Tag",
-      timeEn: "1 day ago",
-      likes: 89,
-      comments: 12,
-      color: "from-amber-500 to-orange-600",
-    },
-    {
-      id: 4,
-      title: "Workshop: Zero Waste im Alltag",
-      titleEn: "Workshop: Zero Waste in Everyday Life",
-      content: "Lerne praktische Tipps für ein nachhaltigeres Leben. Nächster Workshop am Donnerstag, 15:00 Uhr im Raum A101. Anmeldung noch möglich!",
-      contentEn: "Learn practical tips for a more sustainable life. Next workshop on Thursday, 3:00 PM in room A101. Registration still open!",
-      category: "Event",
-      categoryEn: "Event",
-      icon: "📚",
-      author: "Nachhaltigkeitsreferat",
-      authorEn: "Sustainability Office",
-      time: "vor 1 Tag",
-      timeEn: "1 day ago",
-      likes: 67,
-      comments: 8,
-      color: "from-purple-500 to-purple-600",
-      isEvent: true,
-      eventDate: "Donnerstag, 5. Dez, 15:00",
-      eventDateEn: "Thursday, Dec 5, 3:00 PM",
-      eventLocation: "Raum A101",
-      eventLocationEn: "Room A101",
-      eventCoins: 30,
-    },
-    {
-      id: 5,
-      title: "Top 10 Eco-Warriors diese Woche",
-      titleEn: "Top 10 Eco-Warriors This Week",
-      content: "Glückwunsch an alle, die es in die Top 10 geschafft haben! Besonders Anna Schmidt mit 847 Coins diese Woche. Weiter so! 🏆",
-      contentEn: "Congratulations to all who made it into the top 10! Especially Anna Schmidt with 847 coins this week. Keep it up! 🏆",
-      category: "Community",
-      categoryEn: "Community",
-      icon: "👥",
-      author: "Community Manager",
-      authorEn: "Community Manager",
-      time: "vor 2 Tagen",
-      timeEn: "2 days ago",
-      likes: 312,
-      comments: 56,
-      color: "from-pink-500 to-rose-600",
-    },
-    {
-      id: 6,
-      title: "Campus erreicht 10.000 kg CO₂-Einsparung",
-      titleEn: "Campus Reaches 10,000 kg CO₂ Savings",
-      content: "Gemeinsam haben wir die 10 Tonnen CO₂-Einsparung erreicht! Das ist ein großartiger Meilenstein. Danke an alle für euren Beitrag! 🌍💚",
-      contentEn: "Together we have reached the 10 ton CO₂ savings! That's a great milestone. Thank you all for your contribution! 🌍💚",
-      category: "Meilenstein",
-      categoryEn: "Milestone",
-      icon: "🌍",
-      author: "Nachhaltigkeitsteam",
-      authorEn: "Sustainability Team",
-      time: "vor 3 Tagen",
-      timeEn: "3 days ago",
-      likes: 445,
-      comments: 78,
-      color: "from-emerald-500 to-green-600",
-    },
-    {
-      id: 7,
-      title: "Fahrrad-Reparatur-Workshop",
-      titleEn: "Bike Repair Workshop",
-      content: "Lerne die Grundlagen der Fahrradreparatur! Unser Experte zeigt dir, wie du kleine Reparaturen selbst durchführen kannst. Werkzeug wird gestellt.",
-      contentEn: "Learn the basics of bike repair! Our expert will show you how to do small repairs yourself. Tools provided.",
-      category: "Event",
-      categoryEn: "Event",
-      icon: "🔧",
-      author: "Campuswerkstatt",
-      authorEn: "Campus Workshop",
-      time: "vor 4 Stunden",
-      timeEn: "4 hours ago",
-      likes: 123,
-      comments: 34,
-      color: "from-blue-500 to-cyan-600",
-      isEvent: true,
-      eventDate: "Montag, 9. Dez, 16:00",
-      eventDateEn: "Monday, Dec 9, 4:00 PM",
-      eventLocation: "Campuswerkstatt",
-      eventLocationEn: "Campus Workshop",
-      eventCoins: 30,
-    },
-  ];
+  // Filter events
+  const filteredEvents = events.filter((event) => {
+    const title = language === "de" ? event.titleDe : event.titleEn;
+    const description = language === "de" ? event.descriptionDe : event.descriptionEn;
+    const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSearch;
+  });
 
-  const handleLike = (id: number) => {
-    if (likedPosts.includes(id)) {
-      setLikedPosts(likedPosts.filter((postId) => postId !== id));
-    } else {
-      setLikedPosts([...likedPosts, id]);
+  const handleEventClick = (eventId: number) => {
+    const event = events.find(e => e.id === eventId);
+    if (event) {
+      setSelectedEvent(event);
     }
-  };
-
-  const handleSave = (id: number) => {
-    if (savedPosts.includes(id)) {
-      setSavedPosts(savedPosts.filter((postId) => postId !== id));
-    } else {
-      setSavedPosts([...savedPosts, id]);
-    }
-  };
-
-  const handleEventRegistration = (event: NewsItem) => {
-    if (registeredEvents.includes(event.id)) {
-      return; // Already registered
-    }
-
-    // Add to registered events
-    const updated = [...registeredEvents, event.id];
-    setRegisteredEvents(updated);
-    localStorage.setItem("registeredEvents", JSON.stringify(updated));
-
-    // Log activity
-    addActivity({
-      action: `Event angemeldet: ${event.title}`,
-      actionEn: `Event registered: ${event.titleEn}`,
-      coins: event.eventCoins || 30,
-      date: "Heute",
-      type: "event",
-    });
-
-    // Update challenge progress
-    updateChallengeProgress("event-participation", {
-      id: `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: Date.now(),
-      location: language === "de" ? event.eventLocation : event.eventLocationEn,
-    });
-
-    // Show success message
-    toast.success(t.news.eventRegistered);
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-20">
       {/* Header */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white p-6 rounded-b-3xl shadow-lg mb-4"
+        className="relative overflow-hidden bg-gradient-to-r from-[#FF5757] via-[#FF8B8B] to-blue-600 text-white p-6 rounded-b-3xl shadow-lg mb-4"
       >
-        <div className="flex items-center gap-3 mb-2">
-          <Newspaper className="w-8 h-8" />
-          <h1 className="text-2xl">{t.news.title}</h1>
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 opacity-80"
+          style={{
+            backgroundImage: `url(${headerImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+        
+        {/* Gradient Overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FF5757]/40 via-[#FF8B8B]/40 to-blue-600/40" />
+        
+        {/* Content */}
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-2">
+            <Newspaper className="w-8 h-8" />
+            <h1 className="text-2xl">{t.title}</h1>
+          </div>
+          <p className="text-white/90 text-sm">{t.subtitle}</p>
         </div>
-        <p className="text-blue-100 text-sm">
-          {t.news.subtitle}
-        </p>
       </motion.div>
 
-      <div className="p-4 space-y-4">
-        {/* Trending Topics */}
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="w-5 h-5 text-orange-600" />
-              <h3 className="text-gray-900">Trending</h3>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Badge className="bg-white border-orange-300 text-orange-700">
-                #RecyclingRekord
-              </Badge>
-              <Badge className="bg-white border-orange-300 text-orange-700">
-                #FahrradChallenge
-              </Badge>
-              <Badge className="bg-white border-orange-300 text-orange-700">
-                #ZeroWaste
-              </Badge>
-              <Badge className="bg-white border-orange-300 text-orange-700">
-                #Top10
-              </Badge>
-            </div>
-          </Card>
-        </motion.div>
+      {/* Tab Toggle */}
+      <div className="px-4 mb-4">
+        <Card className="p-1 bg-gray-100">
+          <div className="grid grid-cols-2 gap-1">
+            <Button
+              onClick={() => setActiveTab("news")}
+              className={`rounded-lg transition-all ${
+                activeTab === "news"
+                  ? "bg-white text-emerald-600 shadow-md"
+                  : "bg-transparent text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              <Newspaper className="w-4 h-4 mr-2" />
+              {t.news}
+            </Button>
+            <Button
+              onClick={() => setActiveTab("events")}
+              className={`rounded-lg transition-all ${
+                activeTab === "events"
+                  ? "bg-white text-emerald-600 shadow-md"
+                  : "bg-transparent text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              <Calendar className="w-4 h-4 mr-2" />
+              {t.events}
+            </Button>
+          </div>
+        </Card>
+      </div>
 
-        {/* News Feed */}
-        <div className="space-y-4">
-          {news.map((item, index) => {
-            const isLiked = likedPosts.includes(item.id);
-            const isSaved = savedPosts.includes(item.id);
+      {/* Search and Filter */}
+      <div className="px-4 mb-4 space-y-2">
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t.search}
+            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+          />
+        </div>
+      </div>
 
-            return (
-              <motion.div
-                key={item.id}
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 + index * 0.1 }}
-              >
-                <Card className="bg-white border-gray-200 overflow-hidden">
-                  {/* Header */}
-                  <div className="p-4 pb-3">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-10 h-10 bg-gradient-to-br ${item.color} rounded-full flex items-center justify-center text-xl`}
-                        >
-                          {item.icon}
+      {/* Content */}
+      <div className="px-4 space-y-3">
+        {activeTab === "news" ? (
+          <>
+            {/* News Posts */}
+            {filteredNews.length === 0 ? (
+              <Card className="p-12 text-center">
+                <div className="text-6xl mb-4">📰</div>
+                <h3 className="text-gray-900 mb-2">{t.noNews}</h3>
+                <p className="text-sm text-gray-500">{t.noNewsDesc}</p>
+              </Card>
+            ) : (
+              filteredNews.map((post, index) => (
+                <motion.div
+                  key={post.id}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <NewsPostCard
+                    post={post}
+                    onViewComments={setSelectedPost}
+                    onEventClick={handleEventClick}
+                  />
+                </motion.div>
+              ))
+            )}
+          </>
+        ) : (
+          <>
+            {/* Events */}
+            {filteredEvents.length === 0 ? (
+              <Card className="p-12 text-center">
+                <div className="text-6xl mb-4">📅</div>
+                <h3 className="text-gray-900 mb-2">{t.noEvents}</h3>
+                <p className="text-sm text-gray-500">{t.noEventsDesc}</p>
+              </Card>
+            ) : (
+              <>
+                <h2 className="text-gray-700 px-1 mb-2">{t.upcomingEvents}</h2>
+                {filteredEvents.map((event, index) => {
+                  const title = language === "de" ? event.titleDe : event.titleEn;
+                  const description = language === "de" ? event.descriptionDe : event.descriptionEn;
+                  const category = language === "de" ? event.categoryDe : event.categoryEn;
+                  const isFull = event.currentParticipants >= event.maxParticipants;
+                  const availableSpots = event.maxParticipants - event.currentParticipants;
+
+                  return (
+                    <motion.div
+                      key={event.id}
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: index * 0.05 }}
+                      onClick={() => setSelectedEvent(event)}
+                    >
+                      <Card className="p-4 bg-white border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-emerald-300">
+                        {/* Event Header */}
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <Calendar className="w-6 h-6 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <h3 className="text-gray-900">{title}</h3>
+                              <Badge className="bg-emerald-100 text-emerald-700 text-xs">
+                                {category}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                              {description}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm text-gray-900">
-                            {language === "de" ? item.author : item.authorEn}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {language === "de" ? item.time : item.timeEn}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge
-                        variant="secondary"
-                        className="bg-blue-50 text-blue-700 border-blue-200"
-                      >
-                        {language === "de" ? item.category : item.categoryEn}
-                      </Badge>
-                    </div>
 
-                    {/* Content */}
-                    <div>
-                      <h3 className="text-gray-900 mb-2">
-                        {language === "de" ? item.title : item.titleEn}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {language === "de" ? item.content : item.contentEn}
-                      </p>
-                    </div>
-
-                    {/* Event Details & Registration */}
-                    {item.isEvent && (
-                      <div className="mt-4 p-3 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
+                        {/* Event Details */}
                         <div className="space-y-2 mb-3">
-                          <div className="flex items-center gap-2 text-sm text-gray-700">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Calendar className="w-4 h-4 text-purple-600" />
                             <span>
-                              {language === "de" ? item.eventDate : item.eventDateEn}
+                              {event.date.toLocaleDateString(language === "de" ? "de-DE" : "en-US", {
+                                weekday: "short",
+                                month: "short",
+                                day: "numeric",
+                              })}
                             </span>
                           </div>
-                          {item.eventLocation && (
-                            <div className="flex items-center gap-2 text-sm text-gray-700">
-                              <span className="text-purple-600">📍</span>
-                              <span>
-                                {language === "de" ? item.eventLocation : item.eventLocationEn}
-                              </span>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <span className="text-amber-600">+{event.coins} Coins</span>
                             </div>
-                          )}
-                        </div>
-                        
-                        {registeredEvents.includes(item.id) ? (
-                          <div className="flex items-center gap-2 justify-center py-2 bg-green-100 text-green-700 rounded-md">
-                            <CheckCircle2 className="w-4 h-4" />
-                            <span className="text-sm">{t.news.registered}</span>
+                            <div className="flex items-center gap-2">
+                              {isFull ? (
+                                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                  {t.full}
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                  {availableSpots} {t.availableSpots}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                        ) : (
-                          <Button
-                            onClick={() => handleEventRegistration(item)}
-                            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
-                          >
-                            {t.news.registerForEvent}
-                            {item.eventCoins && (
-                              <Badge className="ml-2 bg-yellow-400 text-yellow-900 border-yellow-500">
-                                +{item.eventCoins} Coins
-                              </Badge>
-                            )}
-                          </Button>
-                        )}
-                        {!registeredEvents.includes(item.id) && (
-                          <p className="text-xs text-center text-purple-600 mt-2">
-                            {t.news.participateToEarn}
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="mb-2">
+                          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(event.currentParticipants / event.maxParticipants) * 100}%` }}
+                              transition={{ delay: index * 0.1, duration: 0.5 }}
+                              className={`h-full ${
+                                isFull 
+                                  ? "bg-red-500" 
+                                  : "bg-gradient-to-r from-emerald-500 to-green-600"
+                              }`}
+                            />
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {event.currentParticipants} / {event.maxParticipants} {t.participants}
                           </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <button
-                        onClick={() => handleLike(item.id)}
-                        className="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors"
-                      >
-                        <Heart
-                          className={`w-5 h-5 ${
-                            isLiked ? "fill-red-500 text-red-500" : ""
-                          }`}
-                        />
-                        <span className="text-sm">
-                          {item.likes + (isLiked ? 1 : 0)}
-                        </span>
-                      </button>
-
-                      <button className="flex items-center gap-1 text-gray-500 hover:text-blue-500 transition-colors">
-                        <MessageCircle className="w-5 h-5" />
-                        <span className="text-sm">{item.comments}</span>
-                      </button>
-
-                      <button className="flex items-center gap-1 text-gray-500 hover:text-green-500 transition-colors">
-                        <Share2 className="w-5 h-5" />
-                      </button>
-                    </div>
-
-                    <button
-                      onClick={() => handleSave(item.id)}
-                      className="text-gray-500 hover:text-amber-500 transition-colors"
-                    >
-                      <Bookmark
-                        className={`w-5 h-5 ${
-                          isSaved ? "fill-amber-500 text-amber-500" : ""
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </Card>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Load More */}
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.8 }}
-        >
-          <Button
-            variant="outline"
-            className="w-full border-blue-200 text-blue-600 hover:bg-blue-50"
-          >
-            {t.language === "de" ? "Mehr laden" : "Load more"}
-          </Button>
-        </motion.div>
+                        </div>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </>
+            )}
+          </>
+        )}
       </div>
+
+      {/* Comments Modal */}
+      <CommentsModal
+        post={selectedPost}
+        isOpen={!!selectedPost}
+        onClose={() => setSelectedPost(null)}
+        onUpdate={loadNews}
+      />
+
+      {/* Event Detail Modal */}
+      {selectedEvent && (
+        <EventDetailModal
+          event={selectedEvent}
+          isOpen={!!selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+        />
+      )}
     </div>
   );
 }

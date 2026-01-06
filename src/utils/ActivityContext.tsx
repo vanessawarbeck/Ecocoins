@@ -125,6 +125,12 @@ export function ActivityProvider({ children }: { children: ReactNode }) {
         setActivities(INITIAL_ACTIVITIES);
         localStorage.setItem("userActivities", JSON.stringify(INITIAL_ACTIVITIES));
       }
+      
+      // Initialize totalCoins if not set
+      if (!localStorage.getItem("totalCoins")) {
+        const initialTotal = INITIAL_ACTIVITIES.reduce((sum, act) => sum + act.coins, 0);
+        localStorage.setItem("totalCoins", initialTotal.toString());
+      }
     };
 
     loadActivities();
@@ -154,6 +160,12 @@ export function ActivityProvider({ children }: { children: ReactNode }) {
   };
 
   const getTotalCoins = () => {
+    // Use localStorage totalCoins if available (for real-time updates)
+    const storedCoins = localStorage.getItem("totalCoins");
+    if (storedCoins) {
+      return parseInt(storedCoins);
+    }
+    // Fallback to calculating from activities
     return activities.reduce((total, activity) => total + activity.coins, 0);
   };
 

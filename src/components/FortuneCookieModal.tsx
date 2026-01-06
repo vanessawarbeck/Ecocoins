@@ -8,6 +8,8 @@ import { Sparkles, RefreshCw, X, Lock } from "lucide-react";
 import { PointsAnimation } from "./PointsAnimation";
 import { addPointsTransaction } from "./PointsHistoryModal";
 import { useLanguage } from "../utils/LanguageContext";
+import { useDarkMode } from "../utils/DarkModeContext";
+import { getModalClasses } from "../utils/modalDarkModeClasses";
 import { getFortunes, getCookieTranslations, type Fortune } from "../utils/cookieData";
 
 type CookieState = "unopened" | "cracking" | "opened";
@@ -22,6 +24,8 @@ export function FortuneCookieModal({
   onClose,
 }: FortuneCookieModalProps) {
   const { language } = useLanguage();
+  const { isDarkMode } = useDarkMode();
+  const modalClasses = getModalClasses(isDarkMode);
   const [state, setState] = useState<CookieState>("unopened");
   const [currentFortune, setCurrentFortune] = useState<Fortune | null>(null);
   const [alreadyOpened, setAlreadyOpened] = useState(false);
@@ -119,12 +123,20 @@ export function FortuneCookieModal({
           {/* Close Button */}
           <button
             onClick={handleClose}
-            className="absolute -top-2 -right-2 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition-colors"
+            className={`absolute -top-2 -right-2 z-10 rounded-full p-2 shadow-lg transition-colors ${
+              isDarkMode 
+                ? "bg-gray-700 hover:bg-gray-600 text-gray-200" 
+                : "bg-white hover:bg-gray-100 text-gray-600"
+            }`}
           >
-            <X className="w-5 h-5 text-gray-600" />
+            <X className="w-5 h-5" />
           </button>
 
-          <div className="bg-gradient-to-br from-orange-50 to-amber-100 rounded-3xl p-6 min-h-[400px] flex items-center justify-center">
+          <div className={`rounded-3xl p-6 min-h-[400px] flex items-center justify-center ${
+            isDarkMode 
+              ? "bg-gradient-to-br from-orange-900/90 to-amber-900/90" 
+              : "bg-gradient-to-br from-orange-50 to-amber-100"
+          }`}>
             <AnimatePresence mode="wait">
               {state === "unopened" && !alreadyOpened ? (
                 <motion.div
@@ -200,10 +212,14 @@ export function FortuneCookieModal({
                     transition={{ delay: 0.5 }}
                     className="text-center"
                   >
-                    <h2 className="text-2xl text-amber-800 mb-2">
+                    <h2 className={`text-2xl mb-2 ${
+                      isDarkMode ? "text-amber-200" : "text-amber-800"
+                    }`}>
                       {texts.fortuneCookieTitle}
                     </h2>
-                    <p className="text-amber-600 mb-4">
+                    <p className={`mb-4 ${
+                      isDarkMode ? "text-amber-300" : "text-amber-600"
+                    }`}>
                       {texts.tapToOpen}
                     </p>
 
@@ -216,10 +232,18 @@ export function FortuneCookieModal({
                         repeat: Infinity,
                         ease: "easeInOut",
                       }}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-100/80 backdrop-blur-sm border border-amber-200"
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-sm border ${
+                        isDarkMode 
+                          ? "bg-amber-800/40 border-amber-700" 
+                          : "bg-amber-100/80 border-amber-200"
+                      }`}
                     >
-                      <Sparkles className="w-4 h-4 text-amber-600" />
-                      <span className="text-sm text-amber-700">
+                      <Sparkles className={`w-4 h-4 ${
+                        isDarkMode ? "text-amber-400" : "text-amber-600"
+                      }`} />
+                      <span className={`text-sm ${
+                        isDarkMode ? "text-amber-200" : "text-amber-700"
+                      }`}>
                         {texts.inspirationWaits}
                       </span>
                     </motion.div>
@@ -283,7 +307,9 @@ export function FortuneCookieModal({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: [0, 1, 0.7, 1] }}
                     transition={{ duration: 2 }}
-                    className="text-amber-700 text-center"
+                    className={`text-center ${
+                      isDarkMode ? "text-amber-300" : "text-amber-700"
+                    }`}
                   >
                     {texts.openingCookie}
                   </motion.p>
@@ -301,7 +327,11 @@ export function FortuneCookieModal({
                   }}
                   className="w-full"
                 >
-                  <Card className="p-6 bg-white/95 backdrop-blur-sm border-amber-200 shadow-xl">
+                  <Card className={`p-6 backdrop-blur-sm border shadow-xl ${
+                    isDarkMode 
+                      ? "bg-gray-800/95 border-amber-700" 
+                      : "bg-white/95 border-amber-200"
+                  }`}>
                     <motion.div
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
@@ -336,13 +366,21 @@ export function FortuneCookieModal({
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.7 }}
-                        className="text-xl text-amber-800 mb-2"
+                        className={`text-xl mb-2 ${
+                          isDarkMode ? "text-amber-200" : "text-amber-800"
+                        }`}
                       >
                         {texts.yourWisdom}
                       </motion.h2>
                     </motion.div>
 
                     <motion.blockquote
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.6 }}
+                      className={`text-center mb-6 italic leading-relaxed px-2 ${
+                        isDarkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: 0.6 }}

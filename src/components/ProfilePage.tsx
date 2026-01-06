@@ -5,30 +5,33 @@ import {
   Award,
   Settings,
   Camera,
-  Edit2,
-  Save,
-  X,
   TrendingUp,
   Calendar,
   Gift,
   ChevronRight,
-  RotateCcw,
+  Users,
   CheckCircle,
   Lock,
+  Edit2,
+  Save,
+  X,
 } from "lucide-react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
 import { useLanguage } from "../utils/LanguageContext";
 import { FACULTIES, getFacultyName } from "../utils/faculties";
 import { useActivities } from "../utils/ActivityContext";
+import { useUser } from "../utils/UserContext";
 import { getRedeemedRewards, getTotalRedeemedCoins } from "../utils/rewardsHistory";
 import { calculateBadges, getLevel, getLevelThresholds, getNextLevel } from "../utils/badgeSystem";
 import { AvatarSelector } from "./AvatarSelector";
 import type { Page } from "../App";
+import headerImage from "figma:asset/dfe10b58aa6983d234db78787146bfed4f6a5617.png";
 
 type Tab = "profile" | "badges" | "history" | "rewards";
 
@@ -38,33 +41,21 @@ interface ProfilePageProps {
 
 export function ProfilePage({ onNavigate }: ProfilePageProps) {
   const [activeTab, setActiveTab] = useState<Tab>("profile");
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { t, language } = useLanguage();
-
-  // Get user data from localStorage
-  const [userName, setUserName] = useState("Max Studierender");
-  const [userStudyProgram, setUserStudyProgram] = useState("Informatik");
-  const [userFaculty, setUserFaculty] = useState("");
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-
-  // Edit mode states
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editName, setEditName] = useState("");
   const [editStudyProgram, setEditStudyProgram] = useState("");
   const [editFaculty, setEditFaculty] = useState("");
+  const [editSemester, setEditSemester] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t, language } = useLanguage();
+  const { userProfile, setUserProfile, profileImage, setProfileImage } = useUser();
 
-  useEffect(() => {
-    const savedName = localStorage.getItem("userName");
-    const savedProgram = localStorage.getItem("userStudyProgram");
-    const savedFaculty = localStorage.getItem("userFaculty");
-    const savedImage = localStorage.getItem("userProfileImage");
-
-    if (savedName) setUserName(savedName);
-    if (savedProgram) setUserStudyProgram(savedProgram);
-    if (savedFaculty) setUserFaculty(savedFaculty);
-    if (savedImage) setProfileImage(savedImage);
-  }, []);
+  // Get user data from UserContext
+  const userName = userProfile?.name || "Max Studierender";
+  const userStudyProgram = userProfile?.studiengang || "Informatik";
+  const userFaculty = userProfile?.fakultaet || "";
+  const userSemester = localStorage.getItem("userSemester") || "3";
 
   const getInitials = (name: string) => {
     return name
@@ -79,17 +70,20 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
     setEditName(userName);
     setEditStudyProgram(userStudyProgram);
     setEditFaculty(userFaculty);
+    setEditSemester(userSemester);
     setIsEditingProfile(true);
   };
 
   const handleSaveProfile = () => {
-    setUserName(editName);
-    setUserStudyProgram(editStudyProgram);
-    setUserFaculty(editFaculty);
-
-    localStorage.setItem("userName", editName);
-    localStorage.setItem("userStudyProgram", editStudyProgram);
-    localStorage.setItem("userFaculty", editFaculty);
+    // Update the user profile using UserContext
+    setUserProfile({
+      name: editName,
+      studiengang: editStudyProgram,
+      fakultaet: editFaculty
+    });
+    
+    // Save semester to localStorage
+    localStorage.setItem("userSemester", editSemester);
 
     setIsEditingProfile(false);
   };
@@ -126,7 +120,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
 
   const displayFacultyName = userFaculty
     ? getFacultyName(userFaculty, language)
-    : userStudyProgram;
+    : (language === "de" ? "Keine Fakultät ausgewählt" : "No faculty selected");
 
   return (
     <div className="min-h-screen pb-20">
@@ -134,61 +128,77 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="bg-gradient-to-r from-emerald-600 to-green-600 text-white p-6 rounded-b-3xl shadow-lg mb-4"
+        className="relative overflow-hidden bg-gradient-to-r from-[#FF5757] via-[#FF8B8B] to-emerald-500 text-white p-6 rounded-b-3xl shadow-lg mb-4"
       >
-        <div className="flex items-center gap-4 mb-4">
-          <div className="relative">
-            <Avatar className="w-20 h-20 border-4 border-white/30">
-              {profileImage ? (
-                <AvatarImage src={profileImage} alt={userName} />
-              ) : (
-                <AvatarImage
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`}
-                />
-              )}
-              <AvatarFallback>{getInitials(userName)}</AvatarFallback>
-            </Avatar>
-            <button
-              onClick={() => setIsAvatarSelectorOpen(true)}
-              className="absolute -bottom-1 -right-1 bg-white text-emerald-600 rounded-full p-2 shadow-lg hover:bg-emerald-50 transition-colors"
-            >
-              <Camera className="w-4 h-4" />
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-            />
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 opacity-80"
+          style={{
+            backgroundImage: `url(${headerImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+        
+        {/* Gradient Overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FF5757]/40 via-[#FF8B8B]/40 to-emerald-500/40" />
+        
+        {/* Content */}
+        <div className="relative z-10">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="relative">
+              <Avatar className="w-20 h-20 border-4 border-white/30">
+                {profileImage ? (
+                  <AvatarImage src={profileImage} alt={userName} />
+                ) : (
+                  <AvatarImage
+                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`}
+                  />
+                )}
+                <AvatarFallback>{getInitials(userName)}</AvatarFallback>
+              </Avatar>
+              <button
+                onClick={() => setIsAvatarSelectorOpen(true)}
+                className="absolute -bottom-1 -right-1 bg-white text-emerald-600 rounded-full p-2 shadow-lg hover:bg-emerald-50 transition-colors"
+              >
+                <Camera className="w-4 h-4" />
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+            </div>
+            <div className="flex-1">
+              <h1 className="text-2xl mb-1">{userName}</h1>
+              <p className="text-white/90 text-sm mb-1">{userStudyProgram}</p>
+              <p className="text-white/80 text-xs mb-2">{displayFacultyName}</p>
+              <Badge className="bg-white/20 border-white/30 text-white">
+                {t.profile.level} {userLevel.level} - {language === "de" ? userLevel.title : userLevel.titleEn}
+              </Badge>
+            </div>
           </div>
-          <div className="flex-1">
-            <h1 className="text-2xl mb-1">{userName}</h1>
-            <p className="text-emerald-100 text-sm mb-1">{userStudyProgram}</p>
-            <p className="text-emerald-100 text-xs mb-2">{displayFacultyName}</p>
-            <Badge className="bg-white/20 border-white/30 text-white">
-              {t.profile.level} {userLevel.level} - {language === "de" ? userLevel.title : userLevel.titleEn}
-            </Badge>
-          </div>
-        </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center">
-            <p className="text-2xl mb-1">{totalCoins.toLocaleString()}</p>
-            <p className="text-xs text-emerald-100">Eco Coins</p>
-          </div>
-          <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center">
-            <p className="text-2xl mb-1">23</p>
-            <p className="text-xs text-emerald-100">
-              {language === "de" ? "Rang" : "Rank"}
-            </p>
-          </div>
-          <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center">
-            <p className="text-2xl mb-1">{activities.length}</p>
-            <p className="text-xs text-emerald-100">
-              {language === "de" ? "Aktionen" : "Actions"}
-            </p>
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center">
+              <p className="text-2xl mb-1">{totalCoins.toLocaleString()}</p>
+              <p className="text-xs text-white/80">Eco Coins</p>
+            </div>
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center">
+              <p className="text-2xl mb-1">23</p>
+              <p className="text-xs text-white/80">
+                {language === "de" ? "Rang" : "Rank"}
+              </p>
+            </div>
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center">
+              <p className="text-2xl mb-1">{activities.length}</p>
+              <p className="text-xs text-white/80">
+                {language === "de" ? "Aktionen" : "Actions"}
+              </p>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -257,145 +267,128 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
               </h2>
             </motion.div>
 
-            <Card className="p-4 bg-white border-emerald-100 shadow-md mb-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Edit2 className="w-5 h-5 text-emerald-600" />
-                  <h3 className="text-gray-900">{t.profile.editProfile}</h3>
-                </div>
-                {!isEditingProfile && (
-                  <Button
-                    size="sm"
-                    onClick={handleEditProfile}
-                    className="bg-emerald-500 hover:bg-emerald-600"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-
-              {!isEditingProfile ? (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">{t.profile.name}</span>
-                    <span className="text-gray-900">{userName}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
-                      {t.profile.studyProgram}
-                    </span>
-                    <span className="text-gray-900">{userStudyProgram}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">{t.profile.faculty}</span>
-                    <span className="text-gray-900 text-sm text-right max-w-[60%]">
-                      {displayFacultyName}
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm text-gray-600 flex-shrink-0">
-                      {t.profile.name}
-                    </span>
-                    <Input
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      className="max-w-[60%]"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm text-gray-600 flex-shrink-0">
-                      {t.profile.studyProgram}
-                    </span>
-                    <Input
-                      value={editStudyProgram}
-                      onChange={(e) => setEditStudyProgram(e.target.value)}
-                      className="max-w-[60%]"
-                    />
-                  </div>
-                  <div className="flex items-start justify-between gap-3">
-                    <span className="text-sm text-gray-600 flex-shrink-0 pt-2">
-                      {t.profile.faculty}
-                    </span>
-                    <select
-                      value={editFaculty}
-                      onChange={(e) => setEditFaculty(e.target.value)}
-                      className="max-w-[60%] px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 text-sm"
-                    >
-                      <option value="">
-                        {language === "de"
-                          ? "Fakultät auswählen"
-                          : "Select Faculty"}
-                      </option>
-                      {FACULTIES.map((faculty) => (
-                        <option key={faculty.id} value={faculty.id}>
-                          {language === "de" ? faculty.nameDe : faculty.nameEn}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      onClick={handleSaveProfile}
-                      className="flex-1 bg-emerald-500 hover:bg-emerald-600"
-                    >
-                      <Save className="w-4 h-4 mr-2" />
-                      {language === "de" ? "Speichern" : "Save"}
-                    </Button>
-                    <Button
-                      onClick={handleCancelEdit}
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      {language === "de" ? "Abbrechen" : "Cancel"}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </Card>
-
-            {/* Impact Stats */}
+            {/* Personal Data Card */}
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.15 }}
             >
-              <Card className="p-4 bg-white border-emerald-100 shadow-md">
-                <div className="flex items-center gap-2 mb-3">
-                  <TrendingUp className="w-5 h-5 text-emerald-600" />
-                  <h3 className="text-gray-900">
-                    {language === "de" ? "Dein Impact" : "Your Impact"}
-                  </h3>
+              <Card className="p-4 bg-white dark:bg-gray-800 border-emerald-100 dark:border-gray-700 shadow-md">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
+                    <User className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-gray-900 dark:text-gray-100">
+                      {language === "de" ? "Persönliche Daten" : "Personal Data"}
+                    </h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {language === "de" ? "Profildaten bearbeiten" : "Edit profile data"}
+                    </p>
+                  </div>
+                  {!isEditingProfile && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleEditProfile}
+                      className="text-emerald-600 hover:text-emerald-700"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
-                      {language === "de" ? "CO₂ eingespart" : "CO₂ saved"}
-                    </span>
-                    <span className="text-emerald-600">23 kg</span>
+
+                {!isEditingProfile ? (
+                  <div className="space-y-2 pl-13">
+                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                      <span className="text-sm text-gray-600">{t.profile.name}</span>
+                      <span className="text-gray-900">{userName}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                      <span className="text-sm text-gray-600">{t.onboarding.studyProgram}</span>
+                      <span className="text-gray-900">{userStudyProgram}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                      <span className="text-sm text-gray-600">{t.profile.faculty}</span>
+                      <span className="text-gray-900">{displayFacultyName}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-sm text-gray-600">{t.onboarding.semester}</span>
+                      <span className="text-gray-900">{userSemester}. {t.onboarding.semester}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
-                      {language === "de" ? "Wasser gespart" : "Water saved"}
-                    </span>
-                    <span className="text-blue-600">45 L</span>
+                ) : (
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="edit-name" className="text-gray-700 text-sm">
+                        {t.profile.name}
+                      </Label>
+                      <Input
+                        id="edit-name"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-program" className="text-gray-700 text-sm">
+                        {t.onboarding.studyProgram}
+                      </Label>
+                      <Input
+                        id="edit-program"
+                        value={editStudyProgram}
+                        onChange={(e) => setEditStudyProgram(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-faculty" className="text-gray-700 text-sm">
+                        {t.profile.faculty}
+                      </Label>
+                      <select
+                        id="edit-faculty"
+                        value={editFaculty}
+                        onChange={(e) => setEditFaculty(e.target.value)}
+                        className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                      >
+                        <option value="">{t.onboarding.selectFaculty}</option>
+                        {FACULTIES.map((faculty) => (
+                          <option key={faculty.id} value={faculty.id}>
+                            {getFacultyName(faculty.id, language)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-semester" className="text-gray-700 text-sm">
+                        {t.onboarding.semester}
+                      </Label>
+                      <Input
+                        id="edit-semester"
+                        value={editSemester}
+                        onChange={(e) => setEditSemester(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        onClick={handleSaveProfile}
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                      >
+                        <Save className="w-4 h-4 mr-2" />
+                        {t.common.save}
+                      </Button>
+                      <Button
+                        onClick={handleCancelEdit}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        {t.common.cancel}
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
-                      {language === "de" ? "Mehrweg genutzt" : "Reusable used"}
-                    </span>
-                    <span className="text-amber-600">12x</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
-                      {language === "de" ? "Fahrrad-Kilometer" : "Bike kilometers"}
-                    </span>
-                    <span className="text-purple-600">45 km</span>
-                  </div>
-                </div>
+                )}
               </Card>
             </motion.div>
           </div>
@@ -436,8 +429,8 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                     <Card
                       className={`p-4 ${
                         badge.earned
-                          ? "bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200"
-                          : "bg-white border-gray-200"
+                          ? "bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950 dark:to-green-950 border-emerald-200 dark:border-emerald-800"
+                          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -455,7 +448,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                           <div className="flex items-start justify-between gap-2 mb-1">
                             <h3
                               className={`${
-                                badge.earned ? "text-gray-900" : "text-gray-600"
+                                badge.earned ? "text-gray-900 dark:text-gray-100" : "text-gray-600 dark:text-gray-400"
                               }`}
                             >
                               {language === "de" ? badge.name : badge.nameEn}
@@ -546,16 +539,16 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.1 }}
             >
-              <Card className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200 shadow-md">
+              <Card className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950 dark:to-orange-950 border-amber-200 dark:border-amber-800 shadow-md">
                 <div className="flex items-center gap-2 mb-3">
-                  <TrendingUp className="w-5 h-5 text-amber-600" />
-                  <h3 className="text-gray-900">
+                  <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  <h3 className="text-gray-900 dark:text-gray-100">
                     {language === "de" ? "Dein Level" : "Your Level"}
                   </h3>
                 </div>
 
                 {/* Current Level Display */}
-                <div className="bg-white rounded-xl p-4 mb-4">
+                <div className="bg-white dark:bg-gray-900/50 rounded-xl p-4 mb-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-white shadow-lg">
@@ -723,10 +716,10 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.1 }}
             >
-              <Card className="p-4 bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200 shadow-md">
+              <Card className="p-4 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950 dark:to-green-950 border-emerald-200 dark:border-emerald-800 shadow-md">
                 <div className="flex items-center gap-2 mb-4">
-                  <Gift className="w-5 h-5 text-emerald-600" />
-                  <h3 className="text-gray-900">
+                  <Gift className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  <h3 className="text-gray-900 dark:text-gray-100">
                     {language === "de" ? "Eingelöste Belohnungen" : "Redeemed Rewards"}
                   </h3>
                 </div>
@@ -865,25 +858,16 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
           </Card>
 
           <Card
-            className="p-4 bg-white border-blue-100 cursor-pointer hover:bg-blue-50 transition-colors"
-            onClick={() => {
-              localStorage.removeItem("onboardingComplete");
-              window.location.reload();
-            }}
+            className="p-4 bg-white border-pink-100 cursor-pointer hover:bg-pink-50 transition-colors"
+            onClick={() => onNavigate?.("friends")}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <RotateCcw className="w-5 h-5 text-blue-600" />
+                <Users className="w-5 h-5 text-pink-600" />
                 <div>
-                  <p className="text-gray-900">
-                    {language === "de"
-                      ? "Onboarding zurücksetzen"
-                      : "Reset Onboarding"}
-                  </p>
+                  <p className="text-gray-900">{t.friends.addFriends}</p>
                   <p className="text-xs text-gray-500">
-                    {language === "de"
-                      ? "Einführung erneut anzeigen"
-                      : "Show introduction again"}
+                    {t.settings.friendsDesc}
                   </p>
                 </div>
               </div>

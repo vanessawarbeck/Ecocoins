@@ -1,27 +1,25 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "motion/react";
-import { Users, Trophy, Medal, Crown, TrendingUp } from "lucide-react";
+import { Users, Trophy, Crown, Medal, TrendingUp, Award, Coins } from "lucide-react";
 import { Card } from "./ui/card";
+import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { Avatar } from "./ui/avatar";
+import { Progress } from "./ui/progress";
 import { useLanguage } from "../utils/LanguageContext";
 import { FACULTIES, getFacultyName } from "../utils/faculties";
+import { useUser } from "../utils/UserContext";
+import communityImage from "figma:asset/1ce73e8dd54cc682aaf224e99801ab25a32c23c7.png";
 
 type Tab = "users" | "faculties" | "friends";
 
 export function CommunityPage() {
   const [activeTab, setActiveTab] = useState<Tab>("users");
   const { t, language } = useLanguage();
-  const [userName, setUserName] = useState("Max Mustermann");
-  const [userFaculty, setUserFaculty] = useState("computer-science");
-
-  useEffect(() => {
-    const savedName = localStorage.getItem("userName");
-    const savedFaculty = localStorage.getItem("userFaculty");
-    
-    if (savedName) setUserName(savedName);
-    if (savedFaculty) setUserFaculty(savedFaculty);
-  }, []);
+  const { userProfile } = useUser();
+  
+  // Get user data from UserContext
+  const userName = userProfile?.name || "Max Mustermann";
+  const userFaculty = userProfile?.fakultaet || "computer-science";
 
   const userRankings = [
     { rank: 1, name: "Anna Schmidt", facultyId: "computer-science", coins: 2847, avatar: "🎓" },
@@ -69,17 +67,30 @@ export function CommunityPage() {
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 rounded-b-3xl shadow-lg mb-4"
+        className="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-b-3xl shadow-lg mb-4 overflow-hidden"
       >
-        <div className="flex items-center gap-3 mb-2">
-          <Users className="w-8 h-8" />
-          <h1 className="text-2xl">Community</h1>
+        {/* Background Image with Overlay */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#FF5757]/70 to-transparent z-10"></div>
+          <img 
+            src={communityImage} 
+            alt="Community" 
+            className="w-full h-40 object-cover"
+          />
+          
+          {/* Content over image */}
+          <div className="absolute inset-0 z-20 p-6 flex flex-col justify-end">
+            <div className="flex items-center gap-3 mb-2">
+              <Users className="w-8 h-8" />
+              <h1 className="text-2xl">Community</h1>
+            </div>
+            <p className="text-purple-100 text-sm">
+              {language === "de"
+                ? "Vergleiche dich mit anderen Studierenden"
+                : "Compare yourself with other students"}
+            </p>
+          </div>
         </div>
-        <p className="text-purple-100 text-sm">
-          {language === "de"
-            ? "Vergleiche dich mit anderen Studierenden"
-            : "Compare yourself with other students"}
-        </p>
       </motion.div>
 
       <div className="p-4 space-y-4">
@@ -114,13 +125,13 @@ export function CommunityPage() {
         </motion.div>
 
         {/* Tabs */}
-        <div className="flex gap-2 bg-white rounded-full p-1 shadow-sm">
+        <div className="flex gap-2 bg-white dark:bg-gray-800 rounded-full p-1 shadow-sm">
           <button
             onClick={() => setActiveTab("users")}
             className={`flex-1 py-2 px-4 rounded-full text-sm transition-all ${
               activeTab === "users"
                 ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-md"
-                : "text-gray-600"
+                : "text-gray-600 dark:text-gray-400"
             }`}
           >
             {language === "de" ? "Top User" : "Top Users"}
@@ -130,7 +141,7 @@ export function CommunityPage() {
             className={`flex-1 py-2 px-4 rounded-full text-sm transition-all ${
               activeTab === "faculties"
                 ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-md"
-                : "text-gray-600"
+                : "text-gray-600 dark:text-gray-400"
             }`}
           >
             {language === "de" ? "Fakultäten" : "Faculties"}
@@ -140,7 +151,7 @@ export function CommunityPage() {
             className={`flex-1 py-2 px-4 rounded-full text-sm transition-all ${
               activeTab === "friends"
                 ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-md"
-                : "text-gray-600"
+                : "text-gray-600 dark:text-gray-400"
             }`}
           >
             {language === "de" ? "Freunde" : "Friends"}
@@ -160,8 +171,8 @@ export function CommunityPage() {
                 <Card
                   className={`p-4 ${
                     user.isYou
-                      ? "bg-gradient-to-r from-purple-50 to-pink-50 border-purple-300 shadow-md"
-                      : "bg-white border-gray-200"
+                      ? "bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 border-purple-300 dark:border-purple-700 shadow-md"
+                      : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                   }`}
                 >
                   <div className="flex items-center gap-4">
@@ -171,27 +182,27 @@ export function CommunityPage() {
                     </div>
 
                     {/* Avatar */}
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center text-2xl">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-full flex items-center justify-center text-2xl">
                       {user.avatar}
                     </div>
 
                     {/* Info */}
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="text-gray-900">{user.name}</p>
+                        <p className="text-gray-900 dark:text-gray-100">{user.name}</p>
                         {user.isYou && (
-                          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
+                          <Badge className="bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700 text-xs">
                             {language === "de" ? "Du" : "You"}
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-gray-500">{getFacultyName(user.facultyId, language)}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{getFacultyName(user.facultyId, language)}</p>
                     </div>
 
                     {/* Coins */}
                     <div className="text-right">
                       <p className="text-lg text-emerald-600">{user.coins.toLocaleString()}</p>
-                      <p className="text-xs text-gray-500">Coins</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Coins</p>
                     </div>
                   </div>
                 </Card>
@@ -206,7 +217,7 @@ export function CommunityPage() {
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.1 + index * 0.05 }}
               >
-                <Card className="p-4 bg-white border-gray-200">
+                <Card className="p-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-4">
                     {/* Rank */}
                     <div className="w-8 flex items-center justify-center">
@@ -214,14 +225,14 @@ export function CommunityPage() {
                     </div>
 
                     {/* Icon */}
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center text-2xl">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-full flex items-center justify-center text-2xl">
                       {faculty.icon}
                     </div>
 
                     {/* Info */}
                     <div className="flex-1">
-                      <p className="text-gray-900 mb-1">{getFacultyName(faculty.facultyId, language)}</p>
-                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                      <p className="text-gray-900 dark:text-gray-100 mb-1">{getFacultyName(faculty.facultyId, language)}</p>
+                      <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
                         <span>{faculty.members} {language === "de" ? "Mitglieder" : "Members"}</span>
                         <span>•</span>
                         <span>Ø {faculty.avgCoins} Coins</span>
@@ -233,7 +244,7 @@ export function CommunityPage() {
                       <p className="text-lg text-emerald-600">
                         {(faculty.totalCoins / 1000).toFixed(0)}k
                       </p>
-                      <p className="text-xs text-gray-500">{language === "de" ? "Gesamt" : "Total"}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{language === "de" ? "Gesamt" : "Total"}</p>
                     </div>
                   </div>
                 </Card>
@@ -251,8 +262,8 @@ export function CommunityPage() {
                 <Card
                   className={`p-4 ${
                     friend.isYou
-                      ? "bg-gradient-to-r from-purple-50 to-pink-50 border-purple-300 shadow-md"
-                      : "bg-white border-gray-200"
+                      ? "bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 border-purple-300 dark:border-purple-700 shadow-md"
+                      : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                   }`}
                 >
                   <div className="flex items-center gap-4">
@@ -262,27 +273,27 @@ export function CommunityPage() {
                     </div>
 
                     {/* Avatar */}
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center text-2xl">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-full flex items-center justify-center text-2xl">
                       {friend.avatar}
                     </div>
 
                     {/* Info */}
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="text-gray-900">{friend.name}</p>
+                        <p className="text-gray-900 dark:text-gray-100">{friend.name}</p>
                         {friend.isYou && (
-                          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
+                          <Badge className="bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700 text-xs">
                             {language === "de" ? "Du" : "You"}
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-gray-500">{getFacultyName(friend.facultyId, language)}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{getFacultyName(friend.facultyId, language)}</p>
                     </div>
 
                     {/* Coins */}
                     <div className="text-right">
                       <p className="text-lg text-emerald-600">{friend.coins.toLocaleString()}</p>
-                      <p className="text-xs text-gray-500">Coins</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Coins</p>
                     </div>
                   </div>
                 </Card>
@@ -296,15 +307,15 @@ export function CommunityPage() {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.6 }}
         >
-          <Card className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+          <Card className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 border-purple-200 dark:border-purple-800">
             <div className="text-center">
-              <Trophy className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-              <p className="text-sm text-purple-900 mb-1">
+              <Trophy className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
+              <p className="text-sm text-purple-900 dark:text-purple-300 mb-1">
                 {language === "de"
                   ? "Rangliste wird täglich aktualisiert"
                   : "Rankings updated daily"}
               </p>
-              <p className="text-xs text-purple-700">
+              <p className="text-xs text-purple-700 dark:text-purple-400">
                 {language === "de"
                   ? "Sammle Coins um aufzusteigen!"
                   : "Collect coins to climb up!"}

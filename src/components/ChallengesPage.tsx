@@ -22,6 +22,7 @@ import {
 import { addPointsTransaction } from "./PointsHistoryModal";
 import { PointsAnimation } from "./PointsAnimation";
 import type { Page } from "../App";
+import headerImage from "figma:asset/0697ae6ef0068f49798491ab725989d0c6f4182f.png";
 
 interface ChallengesPageProps {
   onNavigate: (page: Page) => void;
@@ -199,15 +200,15 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
     switch (difficulty) {
       case "Leicht":
       case "Easy":
-        return "bg-green-100 text-green-700 border-green-200";
+        return "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700";
       case "Mittel":
       case "Medium":
-        return "bg-amber-100 text-amber-700 border-amber-200";
+        return "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700";
       case "Schwer":
       case "Hard":
-        return "bg-red-100 text-red-700 border-red-200";
+        return "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border-red-300 dark:border-red-700";
       default:
-        return "bg-gray-100 text-gray-700 border-gray-200";
+        return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600";
     }
   };
 
@@ -217,15 +218,31 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="bg-gradient-to-r from-emerald-600 to-green-600 text-white p-6 rounded-b-3xl shadow-lg mb-4"
+        className="relative overflow-hidden bg-gradient-to-r from-[#FF5757] via-[#FF8B8B] to-orange-500 text-white p-6 rounded-b-3xl shadow-lg mb-4"
       >
-        <div className="flex items-center gap-3 mb-2">
-          <Target className="w-8 h-8" />
-          <h1 className="text-2xl">{t.challenges.title}</h1>
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 opacity-80"
+          style={{
+            backgroundImage: `url(${headerImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+        
+        {/* Gradient Overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FF5757]/40 via-[#FF8B8B]/40 to-orange-500/40" />
+        
+        {/* Content */}
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-2">
+            <Target className="w-8 h-8" />
+            <h1 className="text-2xl">{t.challenges.title}</h1>
+          </div>
+          <p className="text-white/90 text-sm">
+            {t.challenges.subtitle}
+          </p>
         </div>
-        <p className="emerald-100 text-sm">
-          {t.challenges.subtitle}
-        </p>
       </motion.div>
 
       <div className="p-4 space-y-4">
@@ -495,11 +512,11 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="text-center">
                 <p className="text-3xl mb-1">{completedChallenges.length}</p>
-                <p className="text-sm text-emerald-100">{t.challenges.completedChallenges}</p>
+                <p className="text-sm text-white/90">{t.challenges.completedChallenges}</p>
               </div>
               <div className="text-center">
                 <p className="text-3xl mb-1">{activeChallenges.length}</p>
-                <p className="text-sm text-emerald-100">{t.challenges.activeChallenges}</p>
+                <p className="text-sm text-white/90">{t.challenges.activeChallenges}</p>
               </div>
             </div>
             
@@ -529,9 +546,7 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
         challenge={selectedChallenge}
         isOpen={!!selectedChallenge}
         onClose={() => setSelectedChallenge(null)}
-        onStart={handleStartChallenge}
-        onCancel={handleCancelChallenge}
-        onOpenAction={handleOpenAction}
+        onUpdate={() => setChallenges(getChallenges())}
       />
 
       {/* Action Detail Modal */}

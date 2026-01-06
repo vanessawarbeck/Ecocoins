@@ -10,6 +10,8 @@ import { updateChallengeProgress } from "../utils/challengeManager";
 import { addPointsTransaction } from "./PointsHistoryModal";
 import { toast } from "sonner@2.0.3";
 import { useLanguage } from "../utils/LanguageContext";
+import { useDarkMode } from "../utils/DarkModeContext";
+import { getModalClasses } from "../utils/modalDarkModeClasses";
 import { PointsAnimation } from "./PointsAnimation";
 
 interface QuizModalProps {
@@ -30,6 +32,8 @@ export function QuizModal({ isOpen, onClose, onComplete }: QuizModalProps) {
   const [showPointsAnimation, setShowPointsAnimation] = useState(false);
   const [earnedPoints, setEarnedPoints] = useState(0);
   const { language } = useLanguage();
+  const { isDarkMode } = useDarkMode();
+  const modalClasses = getModalClasses(isDarkMode);
 
   // Check if quiz can be taken (once per week)
   useEffect(() => {
