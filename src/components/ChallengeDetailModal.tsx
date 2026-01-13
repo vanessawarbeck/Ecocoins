@@ -25,9 +25,25 @@ export function ChallengeDetailModal({ challenge, isOpen, onClose, onUpdate }: C
 
   if (!challenge) return null;
 
-  const title = language === "de" ? challenge.titleDe : challenge.titleEn;
-  const description = language === "de" ? challenge.descriptionDe : challenge.descriptionEn;
-  const duration = language === "de" ? challenge.durationDe : challenge.durationEn;
+  const title = language === "de" ? challenge.title : challenge.titleEn;
+  const description = language === "de" ? challenge.description : challenge.descriptionEn;
+  const difficulty = language === "de" ? challenge.difficulty : challenge.difficultyEn;
+
+  // Map action type to color
+  const getColorByActionType = (actionType: Challenge["actionType"]) => {
+    const colorMap: Record<Challenge["actionType"], string> = {
+      cycling: "from-blue-500 to-blue-600",
+      recycling: "from-green-500 to-green-600",
+      "reusable-cup": "from-purple-500 to-purple-600",
+      quiz: "from-yellow-500 to-yellow-600",
+      event: "from-pink-500 to-pink-600",
+      "book-exchange": "from-indigo-500 to-indigo-600",
+      "event-participation": "from-pink-500 to-pink-600",
+    };
+    return colorMap[actionType] || "from-emerald-500 to-emerald-600";
+  };
+
+  const challengeColor = getColorByActionType(challenge.actionType);
 
   const texts = {
     de: {
@@ -85,13 +101,13 @@ export function ChallengeDetailModal({ challenge, isOpen, onClose, onUpdate }: C
 
   const handleComplete = () => {
     // Award coins
-    const totalCoins = parseInt(localStorage.getItem("totalCoins") || "0");
-    localStorage.setItem("totalCoins", (totalCoins + challenge.coins).toString());
+    const totalCoins = parseInt(localStorage.getItem("ecoCoins") || "0");
+    localStorage.setItem("ecoCoins", (totalCoins + challenge.reward).toString());
 
     // Add to history
     addPointsTransaction({
       type: "earn",
-      amount: challenge.coins,
+      amount: challenge.reward,
       source: title,
       timestamp: new Date(),
       category: language === "de" ? "Challenge abgeschlossen" : "Challenge Completed",
@@ -102,7 +118,7 @@ export function ChallengeDetailModal({ challenge, isOpen, onClose, onUpdate }: C
     const currentChallenge = challenges.find(c => c.id === challenge.id);
     if (currentChallenge) {
       currentChallenge.status = "completed";
-      currentChallenge.completedAt = new Date();
+      currentChallenge.completedAt = Date.now();
       localStorage.setItem("challenges", JSON.stringify(challenges));
     }
 
@@ -119,12 +135,22 @@ export function ChallengeDetailModal({ challenge, isOpen, onClose, onUpdate }: C
 
   const getStatusBadge = () => {
     const statusConfig = {
-      available: { color: "bg-blue-100 text-blue-800", text: t.available },
+      inactive: { color: "bg-blue-100 text-blue-800", text: t.available },
       active: { color: "bg-green-100 text-green-800", text: t.active },
       completed: { color: "bg-purple-100 text-purple-800", text: t.completedStatus },
     };
 
     const config = statusConfig[challenge.status];
+    
+    // Fallback if status is not in config
+    if (!config) {
+      return (
+        <Badge className="bg-gray-100 text-gray-800 text-xs">
+          {challenge.status}
+        </Badge>
+      );
+    }
+    
     return (
       <Badge className={`${config.color} text-xs`}>
         {config.text}
@@ -132,9 +158,8 @@ export function ChallengeDetailModal({ challenge, isOpen, onClose, onUpdate }: C
     );
   };
 
-  const progressPercentage = challenge.progress 
-    ? (challenge.progress.current / challenge.progress.target) * 100 
-    : 0;
+  // Calculate progress based on challenge data
+  const progressPercentage = (challenge.currentCount / challenge.targetCount) * 100;
   const isCompleted = challenge.status === "completed" || progressPercentage >= 100;
 
   return (
@@ -162,11 +187,11 @@ export function ChallengeDetailModal({ challenge, isOpen, onClose, onUpdate }: C
           >
             {/* Points Animation */}
             {showPointsAnimation && (
-              <PointsAnimation points={challenge.coins} onComplete={() => setShowPointsAnimation(false)} />
+              <PointsAnimation points={challenge.reward} onComplete={() => setShowPointsAnimation(false)} />
             )}
 
             {/* Header */}
-            <div className={`bg-gradient-to-r ${challenge.color} text-white p-6 rounded-t-3xl`}>
+            <div className={`bg-gradient-to-r ${challengeColor} text-white p-6 rounded-t-3xl`}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-2xl">
@@ -195,12 +220,12 @@ export function ChallengeDetailModal({ challenge, isOpen, onClose, onUpdate }: C
               </div>
 
               {/* Progress */}
-              {challenge.progress && (
+              {challenge.status === "active" && (
                 <Card className="p-4 bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-100">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm text-gray-700">{t.progress}</span>
                     <span className="text-sm text-gray-900">
-                      {challenge.progress.current} / {challenge.progress.target} {challenge.progress.unit}
+                      {challenge.currentCount} / {challenge.targetCount}
                     </span>
                   </div>
                   <Progress value={progressPercentage} className="h-3 mb-2" />
@@ -216,14 +241,14 @@ export function ChallengeDetailModal({ challenge, isOpen, onClose, onUpdate }: C
                 <Card className="p-4 bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-200">
                   <Award className="w-5 h-5 text-amber-600 mb-2" />
                   <p className="text-xs text-gray-600 mb-1">{t.reward}</p>
-                  <p className="text-lg text-amber-600">+{challenge.coins}</p>
+                  <p className="text-lg text-amber-600">+{challenge.reward}</p>
                 </Card>
 
                 {/* Duration */}
                 <Card className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
                   <Clock className="w-5 h-5 text-blue-600 mb-2" />
                   <p className="text-xs text-gray-600 mb-1">{t.duration}</p>
-                  <p className="text-sm text-blue-600">{duration}</p>
+                  <p className="text-sm text-blue-600">{difficulty}</p>
                 </Card>
               </div>
 
@@ -253,10 +278,10 @@ export function ChallengeDetailModal({ challenge, isOpen, onClose, onUpdate }: C
 
               {/* Action Buttons */}
               <div className="space-y-2 pt-2">
-                {challenge.status === "available" && (
+                {challenge.status === "inactive" && (
                   <Button
                     onClick={handleStart}
-                    className={`w-full bg-gradient-to-r ${challenge.color} text-white py-6 rounded-xl`}
+                    className={`w-full bg-gradient-to-r ${challengeColor} text-white py-6 rounded-xl`}
                   >
                     <Play className="w-5 h-5 mr-2" />
                     {t.start}
@@ -266,7 +291,7 @@ export function ChallengeDetailModal({ challenge, isOpen, onClose, onUpdate }: C
                 {challenge.status === "active" && !isCompleted && (
                   <Button
                     onClick={onClose}
-                    className={`w-full bg-gradient-to-r ${challenge.color} text-white py-6 rounded-xl`}
+                    className={`w-full bg-gradient-to-r ${challengeColor} text-white py-6 rounded-xl`}
                   >
                     {t.continue}
                   </Button>

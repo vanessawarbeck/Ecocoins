@@ -122,6 +122,32 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
     ? getFacultyName(userFaculty, language)
     : (language === "de" ? "Keine Fakultät ausgewählt" : "No faculty selected");
 
+  // Reload activities when history tab is opened
+  useEffect(() => {
+    if (activeTab === "history") {
+      // Force a re-render by checking localStorage
+      const savedActivities = localStorage.getItem("userActivities");
+      if (savedActivities) {
+        // Activities are already managed by context, this just ensures fresh data
+        console.log("Activities loaded:", JSON.parse(savedActivities).length);
+      }
+    }
+  }, [activeTab]);
+
+  // Listen for activity updates
+  useEffect(() => {
+    const handleActivityUpdate = () => {
+      // Force re-render by triggering a state update
+      // The context will automatically provide the latest activities
+      console.log("Activity update received");
+    };
+
+    window.addEventListener("activitiesUpdated", handleActivityUpdate);
+    return () => {
+      window.removeEventListener("activitiesUpdated", handleActivityUpdate);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen pb-20">
       {/* Header with Profile Info */}
@@ -667,34 +693,36 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <Card className="p-4 bg-white border-emerald-100 shadow-md">
+              <Card className="p-4 bg-white dark:bg-gray-800 border-emerald-100 dark:border-gray-700 shadow-md">
                 <div className="flex items-center gap-2 mb-3">
-                  <Calendar className="w-5 h-5 text-emerald-600" />
-                  <h3 className="text-gray-900">
+                  <Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  <h3 className="text-gray-900 dark:text-gray-100">
                     {language === "de" ? "Letzte Aktivitäten" : "Recent Activities"}
                   </h3>
                 </div>
                 <div className="space-y-3">
                   {activities.length === 0 ? (
-                    <p className="text-sm text-gray-500 text-center py-4">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
                       {language === "de" ? "Noch keine Aktivitäten" : "No activities yet"}
                     </p>
                   ) : (
-                    activities.map((activity) => (
+                    activities.slice(0, 10).map((activity) => (
                       <div
                         key={activity.id}
-                        className="flex items-center justify-between pb-3 border-b border-gray-100 last:border-0 last:pb-0"
+                        className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-700 last:border-0 last:pb-0"
                       >
                         <div>
                           <p className={`text-sm ${
-                            activity.type === "reward" ? "text-red-700" : "text-gray-700"
+                            activity.type === "reward" 
+                              ? "text-red-700 dark:text-red-400" 
+                              : "text-gray-700 dark:text-gray-300"
                           }`}>
                             {language === "de" ? activity.action : activity.actionEn}
                           </p>
-                          <p className="text-xs text-gray-500">{activity.date}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{activity.date}</p>
                         </div>
                         <div className={`text-sm ${
-                          activity.coins < 0 ? "text-red-600" : "text-emerald-600"
+                          activity.coins < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"
                         }`}>
                           {activity.coins > 0 ? "+" : ""}{activity.coins}
                         </div>

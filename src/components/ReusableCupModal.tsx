@@ -11,6 +11,7 @@ import { QRScannerModal } from "./QRScannerModal";
 import { PointsAnimation } from "./PointsAnimation";
 import { addPointsTransaction } from "./PointsHistoryModal";
 import { updateChallengeProgress } from "../utils/challengeData";
+import { useActivities } from "../utils/ActivityContext";
 
 interface ReusableCupModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ interface ReusableCupModalProps {
 export function ReusableCupModal({ isOpen, onClose }: ReusableCupModalProps) {
   const { language } = useLanguage();
   const { isDarkMode } = useDarkMode();
+  const { addActivity } = useActivities();
   const modalClasses = getModalClasses(isDarkMode);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [validated, setValidated] = useState(false);
@@ -80,6 +82,15 @@ export function ReusableCupModal({ isOpen, onClose }: ReusableCupModalProps) {
 
       // Update challenge progress
       updateChallengeProgress(3, 1); // Reusable cup challenge
+
+      // Add to activity history
+      addActivity({
+        action: `Mehrwegbecher genutzt`,
+        actionEn: `Used reusable cup`,
+        coins: COINS_PER_USE,
+        date: language === "de" ? "Heute" : "Today",
+        type: "reusable",
+      });
 
       // Show animation
       setShowPointsAnimation(true);

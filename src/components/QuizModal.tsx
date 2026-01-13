@@ -13,6 +13,7 @@ import { useLanguage } from "../utils/LanguageContext";
 import { useDarkMode } from "../utils/DarkModeContext";
 import { getModalClasses } from "../utils/modalDarkModeClasses";
 import { PointsAnimation } from "./PointsAnimation";
+import { useActivities } from "../utils/ActivityContext";
 
 interface QuizModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export function QuizModal({ isOpen, onClose, onComplete }: QuizModalProps) {
   const [earnedPoints, setEarnedPoints] = useState(0);
   const { language } = useLanguage();
   const { isDarkMode } = useDarkMode();
+  const { addActivity } = useActivities();
   const modalClasses = getModalClasses(isDarkMode);
 
   // Check if quiz can be taken (once per week)
@@ -188,6 +190,15 @@ export function QuizModal({ isOpen, onClose, onComplete }: QuizModalProps) {
         timestamp: Date.now(),
         duration: durationSeconds,
         score: score,
+      });
+
+      // Add to activity history
+      addActivity({
+        action: `Quiz abgeschlossen: ${score}% richtig`,
+        actionEn: `Quiz completed: ${score}% correct`,
+        coins: coinsEarned,
+        date: language === "de" ? "Heute" : "Today",
+        type: "quiz",
       });
 
       // Show points animation after a short delay

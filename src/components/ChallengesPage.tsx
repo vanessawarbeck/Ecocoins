@@ -8,6 +8,11 @@ import { ChallengeDetailModal } from "./ChallengeDetailModal";
 import { ActionDetailModal, type Action } from "./ActionDetailModal";
 import { CoinsProgressModal } from "./CoinsProgressModal";
 import { ActivityHistoryModal } from "./ActivityHistoryModal";
+import { BikeTrackingModal } from "./BikeTrackingModal";
+import { RecycleScanModal } from "./RecycleScanModal";
+import { ReusableCupModal } from "./ReusableCupModal";
+import { BookExchangeModal } from "./BookExchangeModal";
+import { QuizModal } from "./QuizModal";
 import { useLanguage } from "../utils/LanguageContext";
 import { useActivities } from "../utils/ActivityContext";
 import { ALL_ACTIONS } from "../utils/actions";
@@ -45,16 +50,45 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
   const [showHistory, setShowHistory] = useState(false);
   const [showPointsAnimation, setShowPointsAnimation] = useState(false);
   const [earnedPoints, setEarnedPoints] = useState(0);
+  const [showBikeTracking, setShowBikeTracking] = useState(false);
+  const [showRecycleScan, setShowRecycleScan] = useState(false);
+  const [showReusableCup, setShowReusableCup] = useState(false);
+  const [showBookExchange, setShowBookExchange] = useState(false);
+  const [showQuizModal, setShowQuizModal] = useState(false);
 
   useEffect(() => {
     setChallenges(getChallenges());
   }, []);
 
-  // Timer effect for active action
+  // Quick action handler - same as HomePage
+  const handleOpenQuickAction = (actionId: number) => {
+    switch (actionId) {
+      case 1:
+        setShowBikeTracking(true);
+        break;
+      case 2:
+        setShowRecycleScan(true);
+        break;
+      case 3:
+        setShowReusableCup(true);
+        break;
+      case 6:
+        setShowBookExchange(true);
+        break;
+    }
+  };
+
+  const handleModalClose = () => {
+    // Reload challenges after any action
+    setChallenges(getChallenges());
+  };
+
+  // Timer effect for active action - only for cycling
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    if (activeAction) {
+    // Only run timer for cycling action (id: 1)
+    if (activeAction && activeAction.id === 1) {
       interval = setInterval(() => {
         const elapsed = Date.now() - activeAction.startTime;
         const minutes = Math.floor(elapsed / 60000);
@@ -149,9 +183,30 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
 
     // Add to points history
     const actionTitle = language === "de" ? selectedAction.title : selectedAction.titleEn;
-    const descriptionText = selectedAction.id === 6 
-      ? (language === "de" ? "Buch getauscht/abgegeben" : "Book exchanged/donated")
-      : `${language === "de" ? "Aktion abgeschlossen nach" : "Action completed after"} ${Math.floor(durationSeconds / 60)}:${(durationSeconds % 60).toString().padStart(2, "0")} ${language === "de" ? "Min." : "min."}`;
+    
+    // Create description based on action type
+    let descriptionText = "";
+    if (selectedAction.id === 1) {
+      // Cycling - show time
+      descriptionText = `${language === "de" ? "Aktion abgeschlossen nach" : "Action completed after"} ${Math.floor(durationSeconds / 60)}:${(durationSeconds % 60).toString().padStart(2, "0")} ${language === "de" ? "Min." : "min."}`;
+    } else if (selectedAction.id === 6) {
+      // Book exchange
+      descriptionText = language === "de" ? "Buch getauscht/abgegeben" : "Book exchanged/donated";
+    } else if (selectedAction.id === 2) {
+      // Recycling
+      descriptionText = language === "de" ? "Pfandflasche(n) recycelt" : "Deposit bottle(s) recycled";
+    } else if (selectedAction.id === 3) {
+      // Reusable cup
+      descriptionText = language === "de" ? "Mehrwegbecher genutzt" : "Reusable cup used";
+    } else if (selectedAction.id === 4) {
+      // Quiz
+      descriptionText = language === "de" ? "Quiz abgeschlossen" : "Quiz completed";
+    } else if (selectedAction.id === 5) {
+      // Event
+      descriptionText = language === "de" ? "Event-Teilnahme bestätigt" : "Event participation confirmed";
+    } else {
+      descriptionText = language === "de" ? "Aktion abgeschlossen" : "Action completed";
+    }
     
     addPointsTransaction({
       type: "earned",
@@ -248,7 +303,7 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
       <div className="p-4 space-y-4">
         {/* Quick Actions */}
         <div>
-          <h2 className="text-gray-800 mb-3 px-1">{t.home?.quickActions || (language === "de" ? "Schnellaktionen" : "Quick Actions")}</h2>
+          <h2 className="text-gray-800 dark:text-gray-200 mb-3 px-1">{t.home?.quickActions || (language === "de" ? "Schnellaktionen" : "Quick Actions")}</h2>
           <div className="grid grid-cols-2 gap-3">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
@@ -256,10 +311,7 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
               transition={{ delay: 0.1 }}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => {
-                const action = ALL_ACTIONS.find((a) => a.id === 1);
-                if (action) setSelectedAction(action);
-              }}
+              onClick={() => handleOpenQuickAction(1)}
             >
               <Card className="p-4 bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-md cursor-pointer">
                 <div className="text-3xl mb-2">🚴</div>
@@ -273,10 +325,7 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
               transition={{ delay: 0.15 }}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => {
-                const action = ALL_ACTIONS.find((a) => a.id === 2);
-                if (action) setSelectedAction(action);
-              }}
+              onClick={() => handleOpenQuickAction(2)}
             >
               <Card className="p-4 bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-md cursor-pointer">
                 <div className="text-3xl mb-2">♻️</div>
@@ -290,10 +339,7 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
               transition={{ delay: 0.2 }}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => {
-                const action = ALL_ACTIONS.find((a) => a.id === 3);
-                if (action) setSelectedAction(action);
-              }}
+              onClick={() => handleOpenQuickAction(3)}
             >
               <Card className="p-4 bg-gradient-to-br from-amber-500 to-amber-600 text-white border-0 shadow-md cursor-pointer">
                 <div className="text-3xl mb-2">🥤</div>
@@ -307,10 +353,7 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
               transition={{ delay: 0.25 }}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => {
-                const action = ALL_ACTIONS.find((a) => a.id === 6);
-                if (action) setSelectedAction(action);
-              }}
+              onClick={() => handleOpenQuickAction(6)}
             >
               <Card className="p-4 bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-0 shadow-md cursor-pointer">
                 <div className="text-3xl mb-2">📚</div>
@@ -323,7 +366,7 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
         {/* Active Challenges */}
         {activeChallenges.length > 0 && (
           <div>
-            <h2 className="text-gray-800 mb-3 px-1">{t.challenges.active}</h2>
+            <h2 className="text-gray-800 dark:text-gray-200 mb-3 px-1">{t.challenges.active}</h2>
             <div className="space-y-3">
               {activeChallenges.map((challenge, index) => (
                 <motion.div
@@ -335,7 +378,7 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setSelectedChallenge(challenge)}
                 >
-                  <Card className="p-4 bg-white border-emerald-100 shadow-md cursor-pointer hover:shadow-lg transition-shadow">
+                  <Card className="p-4 bg-white dark:bg-gray-800 border-emerald-100 dark:border-gray-700 shadow-md cursor-pointer hover:shadow-lg transition-shadow">
                     <div className="flex items-start gap-3 mb-3">
                       <div className="text-4xl">{challenge.icon}</div>
                       <div className="flex-1">
@@ -399,7 +442,7 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
         {/* Available Challenges */}
         {inactiveChallenges.length > 0 && (
           <div>
-            <h2 className="text-gray-800 mb-3 px-1">{t.challenges.available}</h2>
+            <h2 className="text-gray-800 dark:text-gray-200 mb-3 px-1">{t.challenges.available}</h2>
             <div className="space-y-3">
               {inactiveChallenges.map((challenge, index) => (
                 <motion.div
@@ -411,16 +454,16 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setSelectedChallenge(challenge)}
                 >
-                  <Card className="p-4 bg-white border-gray-200 shadow-md cursor-pointer hover:shadow-lg transition-shadow">
+                  <Card className="p-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-md cursor-pointer hover:shadow-lg transition-shadow">
                     <div className="flex items-start gap-3">
                       <div className="text-4xl opacity-60">{challenge.icon}</div>
                       <div className="flex-1">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
-                            <h3 className="text-gray-900 mb-1">
+                            <h3 className="text-gray-900 dark:text-gray-100 mb-1">
                               {language === "de" ? challenge.title : challenge.titleEn}
                             </h3>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
                               {language === "de" ? challenge.description : challenge.descriptionEn}
                             </p>
                           </div>
@@ -432,14 +475,14 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
                             {language === "de" ? challenge.difficulty : challenge.difficultyEn}
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-500 mt-2">
+                        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mt-2">
                           <div className="flex items-center gap-1">
-                            <Target className="w-4 h-4 text-gray-400" />
+                            <Target className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                             <span>{challenge.targetCount}x</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Award className="w-4 h-4 text-emerald-600" />
-                            <span className="text-emerald-600">
+                            <Award className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            <span className="text-emerald-600 dark:text-emerald-400">
                               +{challenge.reward} Coins
                             </span>
                           </div>
@@ -456,7 +499,7 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
         {/* Completed Challenges */}
         {completedChallenges.length > 0 && (
           <div>
-            <h2 className="text-gray-800 mb-3 px-1">
+            <h2 className="text-gray-800 dark:text-gray-200 mb-3 px-1">
               {t.challenges.completed}
             </h2>
             <div className="space-y-3">
@@ -470,22 +513,22 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setSelectedChallenge(challenge)}
                 >
-                  <Card className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-md cursor-pointer hover:shadow-lg transition-shadow">
+                  <Card className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-green-200 dark:border-green-800 shadow-md cursor-pointer hover:shadow-lg transition-shadow">
                     <div className="flex items-start gap-3">
                       <div className="text-4xl">{challenge.icon}</div>
                       <div className="flex-1">
                         <div className="flex items-start justify-between mb-2">
                           <div>
-                            <h3 className="text-gray-900 mb-1 flex items-center gap-2">
+                            <h3 className="text-gray-900 dark:text-gray-100 mb-1 flex items-center gap-2">
                               {language === "de" ? challenge.title : challenge.titleEn}
                               <span className="text-lg">✓</span>
                             </h3>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
                               {language === "de" ? challenge.description : challenge.descriptionEn}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-emerald-700 mt-2">
+                        <div className="flex items-center gap-4 text-sm text-emerald-700 dark:text-emerald-300 mt-2">
                           <span>{language === "de" ? "Abgeschlossen!" : "Completed!"}</span>
                           <span>+{challenge.reward} {language === "de" ? "Coins erhalten" : "Coins received"}</span>
                         </div>
@@ -583,6 +626,51 @@ export function ChallengesPage({ onNavigate }: ChallengesPageProps) {
         show={showPointsAnimation}
         points={earnedPoints}
         onComplete={() => setShowPointsAnimation(false)}
+      />
+
+      {/* Bike Tracking Modal */}
+      <BikeTrackingModal
+        isOpen={showBikeTracking}
+        onClose={() => {
+          setShowBikeTracking(false);
+          handleModalClose();
+        }}
+      />
+
+      {/* Recycle Scan Modal */}
+      <RecycleScanModal
+        isOpen={showRecycleScan}
+        onClose={() => {
+          setShowRecycleScan(false);
+          handleModalClose();
+        }}
+      />
+
+      {/* Reusable Cup Modal */}
+      <ReusableCupModal
+        isOpen={showReusableCup}
+        onClose={() => {
+          setShowReusableCup(false);
+          handleModalClose();
+        }}
+      />
+
+      {/* Book Exchange Modal */}
+      <BookExchangeModal
+        isOpen={showBookExchange}
+        onClose={() => {
+          setShowBookExchange(false);
+          handleModalClose();
+        }}
+      />
+
+      {/* Quiz Modal */}
+      <QuizModal
+        isOpen={showQuizModal}
+        onClose={() => {
+          setShowQuizModal(false);
+          handleModalClose();
+        }}
       />
     </div>
   );

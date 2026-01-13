@@ -5,12 +5,15 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
 import { useLanguage } from "../utils/LanguageContext";
+import { useDarkMode } from "../utils/DarkModeContext";
+import { useActivities } from "../utils/ActivityContext";
 import { useState } from "react";
 import { toast } from "sonner@2.0.3";
 import type { Event, EventRegistration } from "../utils/newsData";
 import { getEventRegistration, saveEventRegistration, updateEventRegistration } from "../utils/newsData";
 import { PointsAnimation } from "./PointsAnimation";
 import { addPointsTransaction } from "./PointsHistoryModal";
+import { getModalClasses } from "../utils/modalDarkModeClasses";
 
 interface EventDetailModalProps {
   event: Event;
@@ -20,6 +23,9 @@ interface EventDetailModalProps {
 
 export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalProps) {
   const { language } = useLanguage();
+  const { isDarkMode } = useDarkMode();
+  const { addActivity } = useActivities();
+  const darkClasses = getModalClasses(isDarkMode);
   const [registration, setRegistration] = useState<EventRegistration | undefined>(
     getEventRegistration(event.id)
   );
@@ -177,13 +183,22 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
     const totalCoins = parseInt(localStorage.getItem("totalCoins") || "0");
     localStorage.setItem("totalCoins", (totalCoins + event.coins).toString());
 
-    // Add to history
+    // Add to points history
     addPointsTransaction({
       type: "earn",
       amount: event.coins,
       source: title,
       timestamp: new Date(),
       category: language === "de" ? "Event-Teilnahme" : "Event Participation",
+    });
+
+    // Add to activity history
+    addActivity({
+      action: `Event besucht: ${title}`,
+      actionEn: `Event attended: ${event.titleEn}`,
+      coins: event.coins,
+      date: language === "de" ? "Heute" : "Today",
+      type: "event",
     });
 
     // Show animation
@@ -233,7 +248,7 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl max-h-[90vh] overflow-y-auto"
+            className={`fixed inset-x-0 bottom-0 z-50 rounded-t-3xl shadow-2xl max-h-[90vh] overflow-y-auto ${darkClasses.containerRounded}`}
             style={{ top: "56px" }}
           >
             {/* Points Animation */}
@@ -270,32 +285,44 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
               {/* Status Badge */}
               {isRegistered && (
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">{t.status}:</span>
+                  <span className={`text-sm ${darkClasses.textMuted}`}>{t.status}:</span>
                   {getStatusBadge()}
                 </div>
               )}
 
               {/* Description */}
-              <p className="text-gray-700 leading-relaxed">{description}</p>
+              <p className={`leading-relaxed ${darkClasses.textPrimary}`}>{description}</p>
 
               {/* Event Info Grid */}
               <div className="grid grid-cols-1 gap-3">
-                <Card className="p-3 bg-blue-50 border-blue-100">
+                <Card className={`p-3 ${
+                  isDarkMode 
+                    ? "bg-blue-900/30 border-blue-700" 
+                    : "bg-blue-50 border-blue-100"
+                }`}>
                   <div className="flex items-start gap-3">
-                    <MapPin className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <MapPin className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                      isDarkMode ? "text-blue-400" : "text-blue-600"
+                    }`} />
                     <div className="flex-1">
-                      <p className="text-xs text-gray-600 mb-1">{t.location}</p>
-                      <p className="text-sm text-gray-900">{event.location}</p>
+                      <p className={`text-xs mb-1 ${darkClasses.textMuted}`}>{t.location}</p>
+                      <p className={`text-sm ${darkClasses.textPrimary}`}>{event.location}</p>
                     </div>
                   </div>
                 </Card>
 
-                <Card className="p-3 bg-purple-50 border-purple-100">
+                <Card className={`p-3 ${
+                  isDarkMode 
+                    ? "bg-purple-900/30 border-purple-700" 
+                    : "bg-purple-50 border-purple-100"
+                }`}>
                   <div className="flex items-start gap-3">
-                    <Calendar className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                    <Calendar className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                      isDarkMode ? "text-purple-400" : "text-purple-600"
+                    }`} />
                     <div className="flex-1">
-                      <p className="text-xs text-gray-600 mb-1">{t.date}</p>
-                      <p className="text-sm text-gray-900">
+                      <p className={`text-xs mb-1 ${darkClasses.textMuted}`}>{t.date}</p>
+                      <p className={`text-sm ${darkClasses.textPrimary}`}>
                         {event.date.toLocaleDateString(language === "de" ? "de-DE" : "en-US", {
                           weekday: "long",
                           year: "numeric",
@@ -307,24 +334,34 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
                   </div>
                 </Card>
 
-                <Card className="p-3 bg-amber-50 border-amber-100">
+                <Card className={`p-3 ${
+                  isDarkMode 
+                    ? "bg-amber-900/30 border-amber-700" 
+                    : "bg-amber-50 border-amber-100"
+                }`}>
                   <div className="flex items-start gap-3">
-                    <Clock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <Clock className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                      isDarkMode ? "text-amber-400" : "text-amber-600"
+                    }`} />
                     <div className="flex-1">
-                      <p className="text-xs text-gray-600 mb-1">{t.duration}</p>
-                      <p className="text-sm text-gray-900">{event.duration}</p>
+                      <p className={`text-xs mb-1 ${darkClasses.textMuted}`}>{t.duration}</p>
+                      <p className={`text-sm ${darkClasses.textPrimary}`}>{event.duration}</p>
                     </div>
                   </div>
                 </Card>
               </div>
 
               {/* Participants */}
-              <Card className="p-4 bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-100">
+              <Card className={`p-4 ${
+                isDarkMode 
+                  ? "bg-gradient-to-br from-emerald-900/40 to-green-900/40 border-emerald-700" 
+                  : "bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-100"
+              }`}>
                 <div className="flex items-center gap-3 mb-3">
-                  <Users className="w-5 h-5 text-emerald-600" />
+                  <Users className={`w-5 h-5 ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`} />
                   <div className="flex-1">
-                    <p className="text-sm text-gray-900">{t.participants}</p>
-                    <p className="text-xs text-gray-600">
+                    <p className={`text-sm ${darkClasses.textPrimary}`}>{t.participants}</p>
+                    <p className={`text-xs ${darkClasses.textMuted}`}>
                       {event.currentParticipants} / {event.maxParticipants}
                     </p>
                   </div>
@@ -336,51 +373,67 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
               </Card>
 
               {/* Organizer */}
-              <Card className="p-3 bg-gray-50 border-gray-100">
+              <Card className={`p-3 ${darkClasses.card}`}>
                 <div className="flex items-center gap-3">
-                  <UserIcon className="w-5 h-5 text-gray-600" />
+                  <UserIcon className={`w-5 h-5 ${darkClasses.textMuted}`} />
                   <div>
-                    <p className="text-xs text-gray-600">{t.organizer}</p>
-                    <p className="text-sm text-gray-900">{event.organizerName}</p>
-                    <p className="text-xs text-gray-500">{event.organizerFaculty}</p>
+                    <p className={`text-xs ${darkClasses.textMuted}`}>{t.organizer}</p>
+                    <p className={`text-sm ${darkClasses.textPrimary}`}>{event.organizerName}</p>
+                    <p className={`text-xs ${darkClasses.textMuted}`}>{event.organizerFaculty}</p>
                   </div>
                 </div>
               </Card>
 
               {/* Requirements */}
               {requirements && (
-                <Card className="p-3 bg-orange-50 border-orange-100">
+                <Card className={`p-3 ${
+                  isDarkMode 
+                    ? "bg-orange-900/30 border-orange-700" 
+                    : "bg-orange-50 border-orange-100"
+                }`}>
                   <div className="flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <AlertCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                      isDarkMode ? "text-orange-400" : "text-orange-600"
+                    }`} />
                     <div>
-                      <p className="text-xs text-gray-600 mb-1">{t.requirements}</p>
-                      <p className="text-sm text-gray-700">{requirements}</p>
+                      <p className={`text-xs mb-1 ${darkClasses.textMuted}`}>{t.requirements}</p>
+                      <p className={`text-sm ${darkClasses.textPrimary}`}>{requirements}</p>
                     </div>
                   </div>
                 </Card>
               )}
 
               {/* Reward */}
-              <Card className="p-4 bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200">
+              <Card className={`p-4 ${
+                isDarkMode 
+                  ? "bg-gradient-to-r from-yellow-900/40 to-amber-900/40 border-yellow-700" 
+                  : "bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200"
+              }`}>
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center">
                     <Award className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600">{t.reward}</p>
-                    <p className="text-xl text-amber-600">+{event.coins} Eco Coins</p>
+                    <p className={`text-xs ${darkClasses.textMuted}`}>{t.reward}</p>
+                    <p className={`text-xl ${isDarkMode ? "text-amber-400" : "text-amber-600"}`}>
+                      +{event.coins} Eco Coins
+                    </p>
                   </div>
                 </div>
               </Card>
 
               {/* Email Code Confirmation (for pending registrations) */}
               {registration?.status === "pending" && (
-                <Card className="p-4 bg-blue-50 border-blue-200">
-                  <h3 className="text-gray-900 mb-2 flex items-center gap-2">
-                    <Mail className="w-5 h-5 text-blue-600" />
+                <Card className={`p-4 ${
+                  isDarkMode 
+                    ? "bg-blue-900/40 border-blue-700" 
+                    : "bg-blue-50 border-blue-200"
+                }`}>
+                  <h3 className={`mb-2 flex items-center gap-2 ${darkClasses.textPrimary}`}>
+                    <Mail className={`w-5 h-5 ${isDarkMode ? "text-blue-400" : "text-blue-600"}`} />
                     {t.confirmRegistration}
                   </h3>
-                  <p className="text-sm text-gray-600 mb-3">
+                  <p className={`text-sm mb-3 ${darkClasses.textMuted}`}>
                     {t.emailCodeDesc}
                   </p>
                   <div className="flex gap-2">
@@ -389,16 +442,20 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
                       value={emailCode}
                       onChange={(e) => setEmailCode(e.target.value)}
                       placeholder={t.enterCode}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                        isDarkMode
+                          ? "bg-gray-700 border-gray-600 text-gray-200 placeholder:text-gray-400 focus:ring-blue-500"
+                          : "border-gray-300 focus:ring-blue-500"
+                      }`}
                     />
                     <Button
                       onClick={handleConfirmRegistration}
-                      className="bg-blue-600 hover:bg-blue-700"
+                      className={isDarkMode ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-600 hover:bg-blue-700"}
                     >
                       {t.submit}
                     </Button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className={`text-xs mt-2 ${darkClasses.textMuted}`}>
                     {t.demoCode}: EMAIL2024
                   </p>
                 </Card>
@@ -406,12 +463,16 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
 
               {/* Supervisor Confirmation (for confirmed registrations) */}
               {registration?.status === "confirmed" && !registration.coinsAwarded && (
-                <Card className="p-4 bg-green-50 border-green-200">
-                  <h3 className="text-gray-900 mb-2 flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
+                <Card className={`p-4 ${
+                  isDarkMode 
+                    ? "bg-green-900/40 border-green-700" 
+                    : "bg-green-50 border-green-200"
+                }`}>
+                  <h3 className={`mb-2 flex items-center gap-2 ${darkClasses.textPrimary}`}>
+                    <CheckCircle className={`w-5 h-5 ${isDarkMode ? "text-green-400" : "text-green-600"}`} />
                     {t.confirmParticipation}
                   </h3>
-                  <p className="text-sm text-gray-600 mb-3">
+                  <p className={`text-sm mb-3 ${darkClasses.textMuted}`}>
                     {t.supervisorCodeDesc}
                   </p>
                   <div className="flex gap-2">
@@ -420,16 +481,20 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
                       value={supervisorCode}
                       onChange={(e) => setSupervisorCode(e.target.value)}
                       placeholder={t.enterCode}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className={`flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                        isDarkMode
+                          ? "bg-gray-700 border-gray-600 text-gray-200 placeholder:text-gray-400 focus:ring-green-500"
+                          : "border-gray-300 focus:ring-green-500"
+                      }`}
                     />
                     <Button
                       onClick={handleConfirmParticipation}
-                      className="bg-green-600 hover:bg-green-700"
+                      className={isDarkMode ? "bg-green-600 hover:bg-green-700" : "bg-green-600 hover:bg-green-700"}
                     >
                       {t.submit}
                     </Button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className={`text-xs mt-2 ${darkClasses.textMuted}`}>
                     {t.demoCode}: SUP2024
                   </p>
                 </Card>

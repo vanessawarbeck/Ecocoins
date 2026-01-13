@@ -3,6 +3,7 @@ import { X, CheckCircle, Copy, Calendar, QrCode } from "lucide-react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { useLanguage } from "../utils/LanguageContext";
+import { useDarkMode } from "../utils/DarkModeContext";
 import { useState } from "react";
 import { toast } from "sonner@2.0.3";
 import type { RedemptionHistory } from "../utils/rewardsData";
@@ -15,6 +16,7 @@ interface RedeemSuccessModalProps {
 
 export function RedeemSuccessModal({ redemption, isOpen, onClose }: RedeemSuccessModalProps) {
   const { language } = useLanguage();
+  const { isDarkMode } = useDarkMode();
   const [copied, setCopied] = useState(false);
 
   if (!redemption) return null;
@@ -128,7 +130,9 @@ export function RedeemSuccessModal({ redemption, isOpen, onClose }: RedeemSucces
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.8, opacity: 0, y: 50 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[70] bg-white rounded-2xl shadow-2xl max-w-md mx-auto max-h-[85vh] overflow-y-auto"
+            className={`fixed inset-x-4 top-1/2 -translate-y-1/2 z-[70] rounded-2xl shadow-2xl max-w-md mx-auto max-h-[85vh] overflow-y-auto ${
+              isDarkMode ? "bg-gray-800" : "bg-white"
+            }`}
           >
             {/* Success Animation Header */}
             <div className="bg-gradient-to-r from-emerald-600 to-green-600 text-white p-6 rounded-t-2xl relative overflow-hidden">
@@ -179,23 +183,43 @@ export function RedeemSuccessModal({ redemption, isOpen, onClose }: RedeemSucces
             {/* Content */}
             <div className="p-6 space-y-4">
               {/* Reward Info */}
-              <Card className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
+              <Card className={`p-4 border ${
+                isDarkMode 
+                  ? "bg-gradient-to-br from-amber-900/40 to-orange-900/40 border-amber-700" 
+                  : "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200"
+              }`}>
                 <div className="text-center">
-                  <h3 className="text-xl text-gray-900 mb-2">{title}</h3>
-                  <p className="text-sm text-amber-600">-{redemption.coins} Eco Coins</p>
+                  <h3 className={`text-xl mb-2 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>
+                    {title}
+                  </h3>
+                  <p className={`text-sm ${isDarkMode ? "text-amber-400" : "text-amber-600"}`}>
+                    -{redemption.coins} Eco Coins
+                  </p>
                 </div>
               </Card>
 
               {/* Redemption Code */}
-              <Card className="p-4 bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200">
+              <Card className={`p-4 border ${
+                isDarkMode 
+                  ? "bg-gradient-to-br from-emerald-900/40 to-green-900/40 border-emerald-700" 
+                  : "bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200"
+              }`}>
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-2">{t.code}</p>
+                  <p className={`text-sm mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                    {t.code}
+                  </p>
                   <motion.div
                     initial={{ scale: 0.9 }}
                     animate={{ scale: 1 }}
-                    className="bg-white rounded-lg p-4 mb-3 border-2 border-emerald-300"
+                    className={`rounded-lg p-4 mb-3 border-2 ${
+                      isDarkMode 
+                        ? "bg-gray-700 border-emerald-600" 
+                        : "bg-white border-emerald-300"
+                    }`}
                   >
-                    <p className="text-2xl tracking-wider text-emerald-600 select-all">
+                    <p className={`text-2xl tracking-wider select-all ${
+                      isDarkMode ? "text-emerald-400" : "text-emerald-600"
+                    }`}>
                       {redemption.code}
                     </p>
                   </motion.div>
@@ -210,45 +234,75 @@ export function RedeemSuccessModal({ redemption, isOpen, onClose }: RedeemSucces
               </Card>
 
               {/* QR Code Placeholder */}
-              <Card className="p-6 bg-gray-50 border-gray-200">
+              <Card className={`p-6 border ${
+                isDarkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
+              }`}>
                 <div className="text-center">
-                  <div className="w-32 h-32 mx-auto bg-white border-2 border-gray-300 rounded-lg flex items-center justify-center mb-3">
-                    <QrCode className="w-16 h-16 text-gray-400" />
+                  <div className={`w-32 h-32 mx-auto rounded-lg border-2 flex items-center justify-center mb-3 ${
+                    isDarkMode 
+                      ? "bg-gray-600 border-gray-500" 
+                      : "bg-white border-gray-300"
+                  }`}>
+                    <QrCode className={`w-16 h-16 ${isDarkMode ? "text-gray-400" : "text-gray-400"}`} />
                   </div>
-                  <p className="text-xs text-gray-500">
+                  <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
                     {language === "de" ? "QR-Code für Einlösung" : "QR Code for redemption"}
                   </p>
                 </div>
               </Card>
 
               {/* Valid Until */}
-              <Card className="p-3 bg-blue-50 border-blue-200">
+              <Card className={`p-3 border ${
+                isDarkMode 
+                  ? "bg-gradient-to-br from-blue-900/40 to-cyan-900/40 border-blue-700" 
+                  : "bg-blue-50 border-blue-200"
+              }`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm text-gray-700">{t.validUntil}</span>
+                    <Calendar className={`w-4 h-4 ${isDarkMode ? "text-blue-400" : "text-blue-600"}`} />
+                    <span className={`text-sm ${isDarkMode ? "text-gray-200" : "text-gray-700"}`}>
+                      {t.validUntil}
+                    </span>
                   </div>
-                  <span className="text-sm text-blue-600">{formatDate(redemption.expiresAt)}</span>
+                  <span className={`text-sm ${isDarkMode ? "text-blue-400" : "text-blue-600"}`}>
+                    {formatDate(redemption.expiresAt)}
+                  </span>
                 </div>
               </Card>
 
               {/* Instructions */}
-              <Card className="p-4 bg-yellow-50 border-yellow-200">
-                <h4 className="text-sm text-gray-900 mb-3">{t.instructions}</h4>
+              <Card className={`p-4 border ${
+                isDarkMode 
+                  ? "bg-gradient-to-br from-yellow-900/30 to-amber-900/30 border-yellow-700" 
+                  : "bg-yellow-50 border-yellow-200"
+              }`}>
+                <h4 className={`text-sm mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>
+                  {t.instructions}
+                </h4>
                 <div className="space-y-2">
                   {[t.instruction1, t.instruction2, t.instruction3].map((instruction, i) => (
                     <div key={i} className="flex items-start gap-2">
-                      <div className="w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center text-xs text-yellow-900 flex-shrink-0 mt-0.5">
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-0.5 ${
+                        isDarkMode 
+                          ? "bg-yellow-600 text-yellow-100" 
+                          : "bg-yellow-400 text-yellow-900"
+                      }`}>
                         {i + 1}
                       </div>
-                      <p className="text-sm text-gray-700">{instruction}</p>
+                      <p className={`text-sm ${isDarkMode ? "text-gray-200" : "text-gray-700"}`}>
+                        {instruction}
+                      </p>
                     </div>
                   ))}
                 </div>
               </Card>
 
               {/* Warning */}
-              <Card className="p-3 bg-red-50 border-red-200">
+              <Card className={`p-3 border ${
+                isDarkMode 
+                  ? "bg-red-900/30 border-red-700" 
+                  : "bg-red-50 border-red-200"
+              }`}>
                 <div className="flex items-start gap-2">
                   <motion.div
                     animate={{ scale: [1, 1.2, 1] }}
@@ -256,7 +310,9 @@ export function RedeemSuccessModal({ redemption, isOpen, onClose }: RedeemSucces
                   >
                     ⚠️
                   </motion.div>
-                  <p className="text-xs text-red-800">{t.saveCode}</p>
+                  <p className={`text-xs ${isDarkMode ? "text-red-300" : "text-red-800"}`}>
+                    {t.saveCode}
+                  </p>
                 </div>
               </Card>
 

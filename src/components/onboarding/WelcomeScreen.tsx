@@ -27,7 +27,8 @@ export function WelcomeScreen({ onContinue }: WelcomeScreenProps) {
             <img 
               src={logoHM} 
               alt="Hochschule München" 
-              className="h-12 mx-auto object-contain opacity-90"
+              className="h-12 mx-auto object-contain brightness-0 invert"
+              style={{ filter: 'brightness(0) invert(1)' }}
             />
           </motion.div>
 
@@ -118,21 +119,6 @@ export function WelcomeScreen({ onContinue }: WelcomeScreenProps) {
             >
               Los geht's! 🚀
             </Button>
-          </motion.div>
-
-          {/* Footer with HM branding */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.5, duration: 0.6 }}
-            className="mt-8"
-          >
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-              <div className="w-2 h-2 rounded-full bg-[#FF5757]"></div>
-              <p className="text-white/80 text-sm">
-                Hochschule München
-              </p>
-            </div>
           </motion.div>
         </motion.div>
       </div>

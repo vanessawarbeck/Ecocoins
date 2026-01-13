@@ -65,32 +65,56 @@ export function ActionDetailModal({
   if (!action || !isOpen) return null;
 
   // Mock history data - in real app this would come from state/database
-  const history: ActionHistory[] = [
-    {
-      date: "24.11.2024 - 14:30",
-      duration: "25 Min",
-      coins: 30,
-      status: "completed",
-    },
-    {
-      date: "23.11.2024 - 09:15",
-      duration: "18 Min",
-      coins: 22,
-      status: "completed",
-    },
-    {
-      date: "22.11.2024 - 16:45",
-      duration: "5 Min",
-      coins: 0,
-      status: "cancelled",
-    },
-    {
-      date: "21.11.2024 - 11:20",
-      duration: "32 Min",
-      coins: 35,
-      status: "completed",
-    },
-  ];
+  // Only show duration for cycling (action.id === 1)
+  const history: ActionHistory[] = action.id === 1 
+    ? [
+        {
+          date: "24.11.2024 - 14:30",
+          duration: "25 Min",
+          coins: 30,
+          status: "completed",
+        },
+        {
+          date: "23.11.2024 - 09:15",
+          duration: "18 Min",
+          coins: 22,
+          status: "completed",
+        },
+        {
+          date: "22.11.2024 - 16:45",
+          duration: "5 Min",
+          coins: 0,
+          status: "cancelled",
+        },
+        {
+          date: "21.11.2024 - 11:20",
+          duration: "32 Min",
+          coins: 35,
+          status: "completed",
+        },
+      ]
+    : [
+        {
+          date: "24.11.2024 - 14:30",
+          coins: 15,
+          status: "completed",
+        },
+        {
+          date: "23.11.2024 - 09:15",
+          coins: 15,
+          status: "completed",
+        },
+        {
+          date: "22.11.2024 - 16:45",
+          coins: 0,
+          status: "cancelled",
+        },
+        {
+          date: "21.11.2024 - 11:20",
+          coins: 15,
+          status: "completed",
+        },
+      ];
 
   const totalCoins = history
     .filter((h) => h.status === "completed")
@@ -143,7 +167,11 @@ export function ActionDetailModal({
                   className="w-2 h-2 bg-white rounded-full"
                 />
                 <span className="text-sm">
-                  {language === "de" ? "Läuft" : "Running"}: {currentDuration || "0:00"}
+                  {/* Only show duration for cycling (id: 1) */}
+                  {action.id === 1 
+                    ? `${language === "de" ? "Läuft" : "Running"}: ${currentDuration || "0:00"}`
+                    : language === "de" ? "Aktiv" : "Active"
+                  }
                 </span>
               </motion.div>
             )}
@@ -293,9 +321,12 @@ export function ActionDetailModal({
                             </Badge>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">
-                              {language === "de" ? "Dauer" : "Duration"}: {item.duration}
-                            </span>
+                            {/* Only show duration for cycling */}
+                            {item.duration && (
+                              <span className="text-sm text-gray-600">
+                                {language === "de" ? "Dauer" : "Duration"}: {item.duration}
+                              </span>
+                            )}
                             {item.status === "completed" && (
                               <span className="text-emerald-600 text-sm">
                                 +{item.coins} Coins

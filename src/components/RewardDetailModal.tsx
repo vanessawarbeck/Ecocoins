@@ -4,6 +4,7 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { useLanguage } from "../utils/LanguageContext";
+import { useDarkMode } from "../utils/DarkModeContext";
 import type { Reward } from "../utils/rewardsData";
 
 interface RewardDetailModalProps {
@@ -16,6 +17,7 @@ interface RewardDetailModalProps {
 
 export function RewardDetailModal({ reward, isOpen, onClose, onRedeem, hasEnoughCoins }: RewardDetailModalProps) {
   const { language } = useLanguage();
+  const { isDarkMode } = useDarkMode();
 
   if (!reward) return null;
 
@@ -79,7 +81,9 @@ export function RewardDetailModal({ reward, isOpen, onClose, onRedeem, hasEnough
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl max-h-[90vh] overflow-y-auto"
+            className={`fixed inset-x-0 bottom-0 z-50 rounded-t-3xl shadow-2xl max-h-[90vh] overflow-y-auto ${
+              isDarkMode ? "bg-gray-800" : "bg-white"
+            }`}
             style={{ top: "56px" }}
           >
             {/* Header */}
@@ -112,50 +116,84 @@ export function RewardDetailModal({ reward, isOpen, onClose, onRedeem, hasEnough
             {/* Content */}
             <div className="p-6 space-y-4">
               {/* Cost */}
-              <Card className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
+              <Card className={`p-4 border ${
+                isDarkMode 
+                  ? "bg-gradient-to-br from-amber-900/40 to-orange-900/40 border-amber-700" 
+                  : "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200"
+              }`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Coins className="w-6 h-6 text-amber-600" />
-                    <span className="text-gray-700">{t.coins}</span>
+                    <Coins className={`w-6 h-6 ${isDarkMode ? "text-amber-400" : "text-amber-600"}`} />
+                    <span className={isDarkMode ? "text-gray-200" : "text-gray-700"}>{t.coins}</span>
                   </div>
-                  <span className="text-2xl text-amber-600">{reward.coins} Eco Coins</span>
+                  <span className={`text-2xl ${isDarkMode ? "text-amber-400" : "text-amber-600"}`}>
+                    {reward.coins} Eco Coins
+                  </span>
                 </div>
               </Card>
 
               {/* Info Grid */}
               <div className="grid grid-cols-2 gap-3">
                 {/* Category */}
-                <Card className="p-3 bg-white border-gray-200">
-                  <p className="text-xs text-gray-600 mb-1">{t.category}</p>
-                  <p className="text-sm text-gray-900">{category}</p>
+                <Card className={`p-3 border ${
+                  isDarkMode ? "bg-gray-700 border-gray-600" : "bg-white border-gray-200"
+                }`}>
+                  <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
+                    {t.category}
+                  </p>
+                  <p className={`text-sm ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>
+                    {category}
+                  </p>
                 </Card>
 
                 {/* Available */}
-                <Card className="p-3 bg-white border-gray-200">
-                  <p className="text-xs text-gray-600 mb-1">{t.available}</p>
-                  <p className="text-sm text-gray-900">{reward.available} {t.items}</p>
+                <Card className={`p-3 border ${
+                  isDarkMode ? "bg-gray-700 border-gray-600" : "bg-white border-gray-200"
+                }`}>
+                  <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
+                    {t.available}
+                  </p>
+                  <p className={`text-sm ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>
+                    {reward.available} {t.items}
+                  </p>
                 </Card>
               </div>
 
               {/* Stats */}
-              <Card className="p-4 bg-blue-50 border-blue-200">
+              <Card className={`p-4 border ${
+                isDarkMode 
+                  ? "bg-gradient-to-br from-blue-900/40 to-cyan-900/40 border-blue-700" 
+                  : "bg-blue-50 border-blue-200"
+              }`}>
                 <div className="flex items-center gap-3">
-                  <Users className="w-5 h-5 text-blue-600" />
+                  <Users className={`w-5 h-5 ${isDarkMode ? "text-blue-400" : "text-blue-600"}`} />
                   <div>
-                    <p className="text-sm text-gray-700">{t.redeemed}</p>
-                    <p className="text-lg text-blue-600">{reward.redeemedCount}x</p>
+                    <p className={`text-sm ${isDarkMode ? "text-gray-200" : "text-gray-700"}`}>
+                      {t.redeemed}
+                    </p>
+                    <p className={`text-lg ${isDarkMode ? "text-blue-400" : "text-blue-600"}`}>
+                      {reward.redeemedCount}x
+                    </p>
                   </div>
                 </div>
               </Card>
 
               {/* Partner */}
               {reward.partner && (
-                <Card className="p-4 bg-purple-50 border-purple-200">
+                <Card className={`p-4 border ${
+                  isDarkMode 
+                    ? "bg-gradient-to-br from-purple-900/40 to-violet-900/40 border-purple-700" 
+                    : "bg-purple-50 border-purple-200"
+                }`}>
                   <div className="flex items-center gap-3">
-                    <Store className="w-5 h-5 text-purple-600" />
+                    <Store className={`w-5 h-5 ${isDarkMode ? "text-purple-400" : "text-purple-600"}`} />
                     <div>
-                      <p className="text-xs text-gray-600 mb-1">{t.partner}</p>
-                      <p className="text-sm text-purple-900">{reward.partner}</p>
+                      <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
+                        {t.partner}
+                      </p>
+                      <p className={`text-sm ${isDarkMode ? "text-purple-300" : "text-purple-900"}`}>
+                        {reward.partner}
+                      </p>
                     </div>
                   </div>
                 </Card>
@@ -163,12 +201,20 @@ export function RewardDetailModal({ reward, isOpen, onClose, onRedeem, hasEnough
 
               {/* Terms */}
               {terms && (
-                <Card className="p-4 bg-gray-50 border-gray-200">
+                <Card className={`p-4 border ${
+                  isDarkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
+                }`}>
                   <div className="flex items-start gap-3">
-                    <Info className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
+                    <Info className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                      isDarkMode ? "text-gray-400" : "text-gray-600"
+                    }`} />
                     <div>
-                      <p className="text-sm text-gray-600 mb-1">{t.terms}</p>
-                      <p className="text-sm text-gray-700">{terms}</p>
+                      <p className={`text-sm mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
+                        {t.terms}
+                      </p>
+                      <p className={`text-sm ${isDarkMode ? "text-gray-200" : "text-gray-700"}`}>
+                        {terms}
+                      </p>
                     </div>
                   </div>
                 </Card>
@@ -187,7 +233,11 @@ export function RewardDetailModal({ reward, isOpen, onClose, onRedeem, hasEnough
                 ) : (
                   <Button
                     disabled
-                    className="w-full bg-gray-300 text-gray-600 py-6 rounded-xl cursor-not-allowed"
+                    className={`w-full py-6 rounded-xl cursor-not-allowed ${
+                      isDarkMode 
+                        ? "bg-gray-600 text-gray-400" 
+                        : "bg-gray-300 text-gray-600"
+                    }`}
                   >
                     {t.notEnough}
                   </Button>
@@ -196,7 +246,11 @@ export function RewardDetailModal({ reward, isOpen, onClose, onRedeem, hasEnough
                 <Button
                   onClick={onClose}
                   variant="outline"
-                  className="w-full py-4 rounded-xl"
+                  className={`w-full py-4 rounded-xl ${
+                    isDarkMode 
+                      ? "border-gray-600 text-gray-200 hover:bg-gray-700" 
+                      : ""
+                  }`}
                 >
                   {t.close}
                 </Button>

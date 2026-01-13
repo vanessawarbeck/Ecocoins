@@ -18,6 +18,7 @@ import { MobileSidebar } from "./components/MobileSidebar";
 import { NavigationButtons } from "./components/NavigationButtons";
 import { OnboardingFlow } from "./components/onboarding/OnboardingFlow";
 import { DarkModeToggle } from "./components/DarkModeToggle";
+import { AppTutorialModal } from "./components/AppTutorialModal";
 
 export type Page = "home" | "challenges" | "rewards" | "profile" | "dashboard" | "community" | "newsfeed" | "settings" | "friends";
 
@@ -35,10 +36,28 @@ function AppContent() {
   const [showOnboarding, setShowOnboarding] = useState(
     !localStorage.getItem("onboardingCompleted")
   );
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
+    // Show tutorial after onboarding if not seen before
+    if (!localStorage.getItem("tutorialCompleted")) {
+      setTimeout(() => setShowTutorial(true), 500);
+    }
   };
+
+  // Listen for tutorial open event from settings
+  useEffect(() => {
+    const handleOpenTutorial = () => {
+      setShowTutorial(true);
+    };
+    
+    window.addEventListener("openTutorial", handleOpenTutorial);
+    
+    return () => {
+      window.removeEventListener("openTutorial", handleOpenTutorial);
+    };
+  }, []);
 
   const handleNavigate = (page: Page) => {
     navigateTo(page);
@@ -114,6 +133,7 @@ function AppContent() {
                   onForward={handleGoForward}
                 />
                 <DarkModeToggle />
+                <AppTutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
               </div>
             )}
           </ActivityProvider>

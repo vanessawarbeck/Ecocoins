@@ -157,6 +157,9 @@ export function ActivityProvider({ children }: { children: ReactNode }) {
     const updatedActivities = [newActivity, ...activities];
     setActivities(updatedActivities);
     localStorage.setItem("userActivities", JSON.stringify(updatedActivities));
+    
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent("activitiesUpdated"));
   };
 
   const getTotalCoins = () => {

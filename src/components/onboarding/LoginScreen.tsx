@@ -196,21 +196,6 @@ export function LoginScreen({ onContinue, onBack }: LoginScreenProps) {
           </Button>
         </motion.div>
 
-        {/* Register Link */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="mt-4 text-center"
-        >
-          <p className="text-white/80 text-sm">
-            {t.noAccount}{" "}
-            <button className="text-white hover:text-white/90 underline font-semibold">
-              {t.register}
-            </button>
-          </p>
-        </motion.div>
-
         {/* Footer */}
         <motion.div
           initial={{ opacity: 0 }}

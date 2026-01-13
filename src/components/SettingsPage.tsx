@@ -1,18 +1,20 @@
 import { motion } from "motion/react";
 import { useState, useEffect } from "react";
-import { Settings, Globe, Bell, Shield, Info, Check, User, Edit2, Save, X, ChevronRight, Scale, RotateCcw, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Settings, Globe, Bell, Shield, Info, Check, User, Edit2, Save, X, ChevronRight, Scale, RotateCcw, Mail, Lock, Eye, EyeOff, BookOpen } from "lucide-react";
 import { Card } from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { AlertDialog } from "./ui/AlertDialog";
 import { useLanguage } from "../utils/LanguageContext";
+import { useDarkMode } from "../utils/DarkModeContext";
 import { LegalPage } from "./LegalPage";
 
 
 
 export function SettingsPage() {
   const { language, setLanguage, t } = useLanguage();
+  const { isDarkMode } = useDarkMode();
   const [showLegalPage, setShowLegalPage] = useState(false);
 
   // Alert Dialog state
@@ -476,16 +478,46 @@ export function SettingsPage() {
             });
           }}
         >
-          <Card className="p-4 bg-white border-blue-100 shadow-md cursor-pointer hover:bg-blue-50 transition-colors">
+          <Card className="p-4 bg-white dark:bg-gray-800 border-blue-100 dark:border-blue-900 shadow-md cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
                 <RotateCcw className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1">
-                <h3 className="text-gray-900">{t.profile.resetOnboarding}</h3>
-                <p className="text-xs text-gray-500">{t.profile.resetOnboardingDesc}</p>
+                <h3 className="text-gray-900 dark:text-gray-100">{t.profile.resetOnboarding}</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t.profile.resetOnboardingDesc}</p>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-400" />
+              <ChevronRight className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* App Tutorial */}
+        <motion.div
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.27 }}
+          onClick={() => {
+            // Remove tutorial completed flag to allow reopening
+            localStorage.removeItem("tutorialCompleted");
+            // Trigger a page refresh or state update to show tutorial
+            window.dispatchEvent(new CustomEvent("openTutorial"));
+          }}
+        >
+          <Card className="p-4 bg-white dark:bg-gray-800 border-purple-100 dark:border-purple-900 shadow-md cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-950 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-gray-900 dark:text-gray-100">
+                  {language === "de" ? "App-Tutorial erneut anzeigen" : "Show App Tutorial Again"}
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {language === "de" ? "Lerne die App-Funktionen kennen" : "Learn about the app features"}
+                </p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-400 dark:text-gray-500" />
             </div>
           </Card>
         </motion.div>
@@ -536,11 +568,19 @@ export function SettingsPage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          <Card className="p-4 bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200">
+          <Card className={`p-4 border ${
+            isDarkMode 
+              ? "bg-gradient-to-br from-emerald-900/40 to-green-900/40 border-emerald-700" 
+              : "bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200"
+          }`}>
             <div className="text-center">
-              <p className="text-sm text-gray-600 mb-1">Eco Coins App</p>
-              <p className="text-xs text-gray-500">Version 1.0.0</p>
-              <p className="text-xs text-gray-500 mt-2">
+              <p className={`text-sm mb-1 ${isDarkMode ? "text-gray-200" : "text-gray-600"}`}>
+                Eco Coins App
+              </p>
+              <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                Version 1.0.0
+              </p>
+              <p className={`text-xs mt-2 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
                 {t.settings.environment}
               </p>
             </div>

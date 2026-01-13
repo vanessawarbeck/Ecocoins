@@ -208,7 +208,7 @@ export function NewsFeedPage() {
               </Card>
             ) : (
               <>
-                <h2 className="text-gray-700 px-1 mb-2">{t.upcomingEvents}</h2>
+                <h2 className="text-gray-700 dark:text-gray-300 px-1 mb-2">{t.upcomingEvents}</h2>
                 {filteredEvents.map((event, index) => {
                   const title = language === "de" ? event.titleDe : event.titleEn;
                   const description = language === "de" ? event.descriptionDe : event.descriptionEn;
@@ -224,7 +224,7 @@ export function NewsFeedPage() {
                       transition={{ delay: index * 0.05 }}
                       onClick={() => setSelectedEvent(event)}
                     >
-                      <Card className="p-4 bg-white border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-emerald-300">
+                      <Card className="p-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-600">
                         {/* Event Header */}
                         <div className="flex items-start gap-3 mb-3">
                           <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -232,12 +232,12 @@ export function NewsFeedPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <h3 className="text-gray-900">{title}</h3>
-                              <Badge className="bg-emerald-100 text-emerald-700 text-xs">
+                              <h3 className="text-gray-900 dark:text-gray-100">{title}</h3>
+                              <Badge className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs">
                                 {category}
                               </Badge>
                             </div>
-                            <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
                               {description}
                             </p>
                           </div>
@@ -245,8 +245,8 @@ export function NewsFeedPage() {
 
                         {/* Event Details */}
                         <div className="space-y-2 mb-3">
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Calendar className="w-4 h-4 text-purple-600" />
+                          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <Calendar className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                             <span>
                               {event.date.toLocaleDateString(language === "de" ? "de-DE" : "en-US", {
                                 weekday: "short",
@@ -256,16 +256,16 @@ export function NewsFeedPage() {
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <span className="text-amber-600">+{event.coins} Coins</span>
+                            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                              <span className="text-amber-600 dark:text-amber-400">+{event.coins} Coins</span>
                             </div>
                             <div className="flex items-center gap-2">
                               {isFull ? (
-                                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                <Badge variant="outline" className="bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800">
                                   {t.full}
                                 </Badge>
                               ) : (
-                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                <Badge variant="outline" className="bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800">
                                   {availableSpots} {t.availableSpots}
                                 </Badge>
                               )}
@@ -275,7 +275,7 @@ export function NewsFeedPage() {
 
                         {/* Progress Bar */}
                         <div className="mb-2">
-                          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${(event.currentParticipants / event.maxParticipants) * 100}%` }}
@@ -287,7 +287,7 @@ export function NewsFeedPage() {
                               }`}
                             />
                           </div>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             {event.currentParticipants} / {event.maxParticipants} {t.participants}
                           </p>
                         </div>

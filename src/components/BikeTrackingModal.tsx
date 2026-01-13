@@ -12,6 +12,7 @@ import { QRScannerModal } from "./QRScannerModal";
 import { PointsAnimation } from "./PointsAnimation";
 import { addPointsTransaction } from "./PointsHistoryModal";
 import { updateChallengeProgress } from "../utils/challengeData";
+import { useActivities } from "../utils/ActivityContext";
 
 interface BikeTrackingModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ type TrackingState = "idle" | "tracking" | "completed";
 export function BikeTrackingModal({ isOpen, onClose }: BikeTrackingModalProps) {
   const { language } = useLanguage();
   const { isDarkMode } = useDarkMode();
+  const { addActivity } = useActivities();
   const [route, setRoute] = useState<TrackingRoute>(null);
   const [state, setState] = useState<TrackingState>("idle");
   const [distance, setDistance] = useState(0);
@@ -174,6 +176,15 @@ export function BikeTrackingModal({ isOpen, onClose }: BikeTrackingModalProps) {
       source: language === "de" ? "Fahrrad-Fahrt" : "Bike Ride",
       timestamp: new Date(),
       category: language === "de" ? "Mobilität" : "Mobility",
+    });
+
+    // Add to activity history
+    addActivity({
+      action: `Fahrrad-Fahrt: ${distance.toFixed(1)} km`,
+      actionEn: `Bike ride: ${distance.toFixed(1)} km`,
+      coins: coinsEarned,
+      date: language === "de" ? "Heute" : "Today",
+      type: "bike",
     });
 
     // Update challenge progress

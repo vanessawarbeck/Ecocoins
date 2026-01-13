@@ -10,6 +10,7 @@ import { toast } from "sonner@2.0.3";
 import { PointsAnimation } from "./PointsAnimation";
 import { addPointsTransaction } from "./PointsHistoryModal";
 import { updateChallengeProgress } from "../utils/challengeData";
+import { useActivities } from "../utils/ActivityContext";
 
 interface RecycleScanModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ interface RecycleScanModalProps {
 export function RecycleScanModal({ isOpen, onClose }: RecycleScanModalProps) {
   const { language } = useLanguage();
   const { isDarkMode } = useDarkMode();
+  const { addActivity } = useActivities();
   const modalClasses = getModalClasses(isDarkMode);
   const [scanning, setScanning] = useState(false);
   const [scanned, setScanned] = useState(false);
@@ -100,6 +102,15 @@ export function RecycleScanModal({ isOpen, onClose }: RecycleScanModalProps) {
 
       // Update challenge progress
       updateChallengeProgress(2, 1); // Recycling challenge
+
+      // Add to activity history
+      addActivity({
+        action: `Recycling: ${bottles} ${language === "de" ? "Flaschen" : "bottles"}, ${cans} ${language === "de" ? "Dosen" : "cans"}`,
+        actionEn: `Recycling: ${bottles} bottles, ${cans} cans`,
+        coins: coinsEarned,
+        date: language === "de" ? "Heute" : "Today",
+        type: "recycle",
+      });
 
       // Show animation
       setShowPointsAnimation(true);

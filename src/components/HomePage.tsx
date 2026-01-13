@@ -39,8 +39,8 @@ import { BookExchangeModal } from "./BookExchangeModal";
 import { QuizModal } from "./QuizModal";
 import { ChallengeDetailModal } from "./ChallengeDetailModal";
 import { ImpactInsightsModal } from "./ImpactInsightsModal";
-import { getActiveChallenges, getAvailableChallenges, getChallenges } from "../utils/challengeData";
-import type { Challenge } from "../utils/challengeData";
+import { getChallenges, getActiveChallenges as getActiveChallengesFromManager, getTimeRemaining } from "../utils/challengeManager";
+import type { Challenge } from "../utils/challengeManager";
 import type { Page } from "../App";
 import headerImage from "figma:asset/60cd381a5b425f36dc14699fb6f6013df056e436.png";
 
@@ -113,7 +113,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
     setChallenges(getChallenges());
   };
 
-  const activeChallenges = getActiveChallenges();
+  const activeChallenges = getActiveChallengesFromManager();
 
   // Popular highlights data
   const popularHighlights = [
@@ -351,26 +351,26 @@ export function HomePage({ onNavigate }: HomePageProps) {
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="text-gray-900 dark:text-gray-100">
-                          {language === "de" ? challenge.titleDe : challenge.titleEn}
+                          {language === "de" ? challenge.title : challenge.titleEn}
                         </h4>
                         <Award className="w-4 h-4 text-emerald-600" />
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-600 dark:text-gray-400">
-                            {challenge.progress.current}/{challenge.progress.target}
+                            {challenge.currentCount}/{challenge.targetCount}
                           </span>
                           <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            {language === "de" ? challenge.durationDe : challenge.durationEn}
+                            {getTimeRemaining(challenge.deadline, language)}
                           </span>
                         </div>
                         <Progress
-                          value={(challenge.progress.current / challenge.progress.target) * 100}
+                          value={(challenge.currentCount / challenge.targetCount) * 100}
                           className="h-2 bg-emerald-100 dark:bg-gray-700"
                         />
                         <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                          +{challenge.coins} {language === "de" ? "Coins bei Abschluss" : "Coins on completion"}
+                          +{challenge.reward} {language === "de" ? "Coins bei Abschluss" : "Coins on completion"}
                         </p>
                       </div>
                     </div>
@@ -570,9 +570,9 @@ export function HomePage({ onNavigate }: HomePageProps) {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Coins className="w-4 h-4" />
-                        <span className="text-sm">+{popularHighlights[currentHighlightIndex].coins} Coins</span>
+                        <span className="text-sm text-white/95">+{popularHighlights[currentHighlightIndex].coins} Coins</span>
                       </div>
-                      <div className="flex items-center gap-1 text-sm">
+                      <div className="flex items-center gap-1 text-sm text-white/95">
                         <Users className="w-4 h-4" />
                         <span>{popularHighlights[currentHighlightIndex].participants}</span>
                       </div>

@@ -6,9 +6,17 @@ export const getModalClasses = (isDarkMode: boolean) => ({
   // Modal Container
   backdrop: "fixed inset-0 bg-black/50 z-50",
   
+  // Modal Overlay
+  modalOverlay: "fixed inset-0 bg-black/50 z-50 backdrop-blur-sm",
+  
   container: isDarkMode 
     ? "bg-gray-900 text-white" 
     : "bg-white text-gray-900",
+  
+  // Modal Container with rounded corners and padding
+  modalContainer: isDarkMode
+    ? "bg-gray-900 text-white rounded-2xl p-6 shadow-2xl"
+    : "bg-white text-gray-900 rounded-2xl p-6 shadow-2xl",
   
   containerRounded: isDarkMode
     ? "bg-gray-900 text-white rounded-t-3xl"
@@ -19,11 +27,20 @@ export const getModalClasses = (isDarkMode: boolean) => ({
     ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
     : "bg-white hover:bg-gray-100 text-gray-600",
   
+  // Modal Close Button (top right)
+  modalCloseButton: isDarkMode
+    ? "absolute top-4 right-4 p-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-full transition-colors"
+    : "absolute top-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full transition-colors",
+  
   closeButtonRounded: isDarkMode
     ? "bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-full"
     : "bg-white hover:bg-gray-100 text-gray-600 rounded-full",
   
   headerCloseButton: "bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full",
+  
+  // Modal Text
+  modalText: isDarkMode ? "text-gray-300" : "text-gray-600",
+  modalTitle: isDarkMode ? "text-white font-bold text-xl" : "text-gray-900 font-bold text-xl",
   
   // Cards
   card: isDarkMode
